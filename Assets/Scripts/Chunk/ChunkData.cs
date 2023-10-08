@@ -1,36 +1,13 @@
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
-using System;
-using Unity.VisualScripting;
-using System.Threading;
+using Unity.Collections;
 
 public struct ChunkData
 {
     public ChunkCoord ChunkCoord { get; set; }
-    public ConcurrentDictionary<TileCoord, TileData> ChunkDataDictionary { get; set; }
+    public NativeHashMap<TileCoord, TileData> TilesHashMap { get; set; }
 
-    public ChunkData(ChunkCoord chunkCoord, ConcurrentDictionary<TileCoord, TileData> chunkDataDictionary)
+    public ChunkData(ChunkCoord chunkCoord, NativeHashMap<TileCoord, TileData> tilesHashMap)
     {
         ChunkCoord = chunkCoord;
-        ChunkDataDictionary = chunkDataDictionary;
+        TilesHashMap = tilesHashMap;
     }
-
-    //public async Task ParallelCreateChunkData(CancellationTokenSource tokenSource)
-    //{
-    //    ConcurrentDictionary<TileCoord, TileData> chunkData =
-    //            new(Environment.ProcessorCount, Chunk.TOTAL_SIZE);
-
-    //    await Task.Run(() =>
-    //    {
-    //        for (byte y = 0; y < Chunk.Y_SIZE; y++)
-    //        {
-    //            for (byte x = 0; x < Chunk.X_SIZE; x++)
-    //            {
-    //                chunkData.TryAdd(new TileCoord(x, y), new TileData(Tile.TileType.Dirt));
-    //            }
-    //        }
-    //    }, tokenSource.Token);
-
-    //    ChunkDataDictionary.AddRange(chunkData.ToArray());
-    //}
 }

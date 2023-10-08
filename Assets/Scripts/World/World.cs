@@ -1,8 +1,4 @@
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -27,15 +23,9 @@ public class World : MonoBehaviour
     private short _worldMiddleX = 0;
     private short _worldMiddleY = 0;
 
-    public NativeHashMap<ChunkCoord, ChunkData> WorldNativeHashMap { get; set; }
+    public NativeHashMap<ChunkCoord, ChunkData> WorldHashMap { get; set; }
 
-    //private CancellationTokenSource _tokenSource = null;
-    //public ConcurrentDictionary<ChunkCoord, ChunkData> WorldDataDictionary { get; set; } = null;
-    //public ConcurrentQueue<ChunkData> ChunksReadyToBuildMeshQueue { get; set; } = null;
-
-    private bool _createOnce = false;
     private JobHandle _jobHandle;
-    private TileMeshData _tileMeshData;
 
     [BurstCompile]
     private struct TileMeshGenerationJob : IJob
@@ -52,16 +42,13 @@ public class World : MonoBehaviour
 
     private void Awake()
     {
-        //_tokenSource = new CancellationTokenSource();
+        WorldHashMap = new(XSizeInChunks * YSizeInChunks, Allocator.Persistent);
+        _worldMiddleX = (short)(XSizeInChunks / 2);
+        _worldMiddleY = (short)(YSizeInChunks / 2);
     }
 
     void Start()
     {
-        //WorldDataDictionary = new(Environment.ProcessorCount, XSizeInChunks * YSizeInChunks);
-        //ChunksReadyToBuildMeshQueue = new();
-        _worldMiddleX = (short)(XSizeInChunks / 2);
-        _worldMiddleY = (short)(YSizeInChunks / 2);
-
         // (TEST) -> Generate single tile on worker thread.
         //_tileMeshData = new TileMeshData(Allocator.TempJob);
 
@@ -102,30 +89,6 @@ public class World : MonoBehaviour
 
         //    _createOnce = true;
         //}
-
-        //HandleCreateChunksInParallel();
-
-        //while (ChunksReadyToBuildMeshQueue.Count > 0)
-        //{
-        //    if (ChunksReadyToBuildMeshQueue.TryDequeue(out ChunkData chunkData))
-        //    {
-        //        GameObject chunkObj = Instantiate(
-        //            new GameObject($"X:{chunkData.ChunkCoord.XCoord} / Y:{chunkData.ChunkCoord.YCoord}"),
-        //            gameObject.transform, true);
-
-        //        Mesh mesh = new();
-
-        //        mesh.SetVertices(Tile.CreateVertices());
-        //        mesh.SetUVs(0, Tile.CreateUvs());
-        //        mesh.SetTriangles(Tile.CreateTriangles(), 0);
-
-        //        MeshFilter meshfilter = chunkObj.AddComponent<MeshFilter>();
-        //        meshfilter.mesh = mesh;
-
-        //        MeshRenderer meshRenderer = chunkObj.AddComponent<MeshRenderer>();
-        //        meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        //    }
-        //}
     }
 
     //private async void HandleCreateChunksInParallel()
@@ -158,9 +121,4 @@ public class World : MonoBehaviour
     //        }
     //    }, _tokenSource.Token);
     //}
-
-    private void OnApplicationQuit()
-    {
-        //_tokenSource.Cancel(false);
-    }
 }
