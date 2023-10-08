@@ -23,32 +23,53 @@ public class World : MonoBehaviour
     private short _worldMiddleX = 0;
     private short _worldMiddleY = 0;
 
-    public NativeHashMap<ChunkCoord, ChunkData> WorldHashMap { get; set; }
+    //public NativeHashMap<ChunkCoord, ChunkData> WorldHashMap { get; set; }
 
-    private JobHandle _jobHandle;
+    public NativeArray<ChunkCoord> ChunkCoordNativeArray { get; set; }
+    public NativeArray<TileCoord> TileCoordNativeArray { get; set; }
+    public NativeArray<TileData> TileDataNativeArray { get; set; }
 
-    [BurstCompile]
-    private struct TileMeshGenerationJob : IJob
-    {
-        public TileMeshData tileMeshData;
+    private JobHandle _jobHandleCreateChunkCoords;
+    private JobHandle _jobHandleCreateTileCoords;
+    private JobHandle _jobHandleCreateTileData;
 
-        public void Execute()
-        {
-            Tile.CreateVertices(ref tileMeshData.vertices);
-            Tile.CreateUvs(ref tileMeshData.uvs);
-            Tile.CreateTriangles(ref tileMeshData.triangles);
-        }
-    }
+
+    private bool createOnce = false;
+
+    //[BurstCompile]
+    //private struct TileMeshGenerationJob : IJob
+    //{
+    //    public TileMeshData tileMeshData;
+
+    //    public void Execute()
+    //    {
+    //        Tile.CreateVertices(ref tileMeshData.vertices);
+    //        Tile.CreateUvs(ref tileMeshData.uvs);
+    //        Tile.CreateTriangles(ref tileMeshData.triangles);
+    //    }
+    //}
 
     private void Awake()
     {
-        WorldHashMap = new(XSizeInChunks * YSizeInChunks, Allocator.Persistent);
+        //WorldHashMap = new(XSizeInChunks * YSizeInChunks, Allocator.TempJob);
+
+        ChunkCoordNativeArray = new(XSizeInChunks * YSizeInChunks, Allocator.Persistent);
+
         _worldMiddleX = (short)(XSizeInChunks / 2);
         _worldMiddleY = (short)(YSizeInChunks / 2);
     }
 
     void Start()
     {
+        CreateChunkCoordJob createChunksJob = new CreateChunkCoordJob
+        {
+            chunksCoords = ChunkCoordNativeArray,
+            worldMiddleX = _worldMiddleX,
+            worldMiddleY = _worldMiddleY,
+        };
+
+        _jobHandleCreateChunkCoords = createChunksJob.Schedule();
+
         // (TEST) -> Generate single tile on worker thread.
         //_tileMeshData = new TileMeshData(Allocator.TempJob);
 
@@ -62,6 +83,23 @@ public class World : MonoBehaviour
 
     private void Update()
     {
+        if (_jobHandleCreateChunkCoords.IsCompleted && !createOnce)
+        {
+            _jobHandleCreateChunkCoords.Complete();
+
+            //CreateTileJob createTileJob = new CreateTileJob();
+            //createTileJob.Schedule();
+
+            createOnce = true;
+
+            //foreach(var chunkCoord in ChunkCoordsNativeArray)
+            //{
+            //    Debug.Log($"Chunk: " +
+            //        $"XCoord {chunkCoord.XCoord} / " +
+            //        $"YCoord {chunkCoord.YCoord}");
+            //}
+        }
+
         //if (_jobHandle.IsCompleted && !_createOnce)
         //{
         //    _jobHandle.Complete();
@@ -89,6 +127,12 @@ public class World : MonoBehaviour
 
         //    _createOnce = true;
         //}
+    }
+
+    private void OnApplicationQuit()
+    {
+        //WorldHashMap.Dispose();
+        ChunkCoordNativeArray.Dispose();
     }
 
     //private async void HandleCreateChunksInParallel()

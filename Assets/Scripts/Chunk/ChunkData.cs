@@ -3,11 +3,9 @@ using Unity.Collections;
 public struct ChunkData
 {
     public ChunkCoord ChunkCoord { get; set; }
-    public NativeHashMap<TileCoord, TileData> TilesHashMap { get; set; }
 
-    public ChunkData(ChunkCoord chunkCoord, NativeHashMap<TileCoord, TileData> tilesHashMap)
+    public ChunkData(ChunkCoord chunkCoord)
     {
         ChunkCoord = chunkCoord;
-        TilesHashMap = tilesHashMap;
     }
 }
