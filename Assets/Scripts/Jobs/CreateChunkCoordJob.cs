@@ -7,7 +7,7 @@ public struct CreateChunkCoordJob : IJob
 {
     public short worldMiddleX;
     public short worldMiddleY;
-    public NativeArray<ChunkCoord> chunksCoords;
+    public NativeArray<ChunkCoord> chunksCoordsNativeArray;
 
     public void Execute()
     {
@@ -16,7 +16,7 @@ public struct CreateChunkCoordJob : IJob
         {
             for (short x = (short)-worldMiddleX; x < worldMiddleX; x++)
             {
-                chunksCoords[iteration] = new ChunkCoord(x, y);
+                chunksCoordsNativeArray[iteration] = new ChunkCoord(x, y);
                 iteration++;
             }
         }

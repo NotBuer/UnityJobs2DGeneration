@@ -1,5 +1,6 @@
 using System;
 
+[Serializable]
 public struct TileCoord : IEquatable<TileCoord>
 {
     public int XCoord { get; set; }
