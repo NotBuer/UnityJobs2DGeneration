@@ -373,6 +373,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   XSizeInChunks: 2
   YSizeInChunks: 2
+  DebugLogChunkCoordGeneration: 0
+  DebugLogTileCoordGeneration: 0
+  DebugLogTileDataGeneration: 0
+  DebugLogWorldChunksVerticesData: 1
+  DebugLogWorldChunksTrianglesData: 0
+  DebugLogWorldChunksUVSData: 0
 --- !u!4 &1008856646
 Transform:
   m_ObjectHideFlags: 0

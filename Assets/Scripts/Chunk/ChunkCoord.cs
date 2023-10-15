@@ -1,5 +1,8 @@
 using System;
+using System.Runtime.InteropServices;
 
+[Serializable]
+[StructLayout(LayoutKind.Sequential)]
 public struct ChunkCoord : IEquatable<ChunkCoord>
 {
     public int XCoord { get; set; }

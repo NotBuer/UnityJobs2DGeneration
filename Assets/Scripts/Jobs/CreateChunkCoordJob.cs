@@ -1,6 +1,7 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
+using UnityEngine;
 
 [BurstCompile]
 public struct CreateChunkCoordJob : IJob
@@ -16,7 +17,7 @@ public struct CreateChunkCoordJob : IJob
         {
             for (short x = (short)-worldMiddleX; x < worldMiddleX; x++)
             {
-                chunksCoordsNativeArray[iteration] = new ChunkCoord(x, y);
+                chunksCoordsNativeArray[iteration] = new ChunkCoord(x * Chunk.X_SIZE, y * Chunk.Y_SIZE);
                 iteration++;
             }
         }

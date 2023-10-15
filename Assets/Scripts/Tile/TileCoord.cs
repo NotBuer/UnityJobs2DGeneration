@@ -1,6 +1,8 @@
 using System;
+using System.Runtime.InteropServices;
 
 [Serializable]
+[StructLayout(LayoutKind.Sequential)]
 public struct TileCoord : IEquatable<TileCoord>
 {
     public int XCoord { get; set; }
