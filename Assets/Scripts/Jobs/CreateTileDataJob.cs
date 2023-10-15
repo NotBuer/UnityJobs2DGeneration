@@ -5,19 +5,25 @@ using Unity.Jobs;
 [BurstCompile]
 public struct CreateTileDataJob : IJob
 {
-    public int chunksInTheWorld;
-    public NativeArray<TileData> tileDataNativeArray;
+    [ReadOnly] public NativeArray<ChunkCoord> _chunkCoordNativeArray;
+    public NativeArray<TileData> _tileDataNativeArray;
+
+    public CreateTileDataJob(NativeArray<ChunkCoord> chunkCoordNativeArray, NativeArray<TileData> tileDataNativeArray)
+    {
+        _chunkCoordNativeArray = chunkCoordNativeArray;
+        _tileDataNativeArray = tileDataNativeArray;
+    }
 
     public void Execute()
     {
-        for (int chunkInBuffer = 0; chunkInBuffer <= chunksInTheWorld; chunkInBuffer++)
+        for (int chunkInBuffer = 0; chunkInBuffer <= _chunkCoordNativeArray.Length - 1; chunkInBuffer++)
         {
             int tileInChunk = 0;
             for (int y = 0; y < Chunk.Y_SIZE; y++)
             {
                 for (int x = 0; x < Chunk.X_SIZE; x++)
                 {
-                    tileDataNativeArray[(chunkInBuffer * Chunk.TOTAL_SIZE) + chunkInBuffer + tileInChunk] = new TileData(Tile.TileType.Stone);
+                    _tileDataNativeArray[(chunkInBuffer * Chunk.TOTAL_SIZE) + chunkInBuffer + tileInChunk] = new TileData(Tile.TileType.Stone);
                     tileInChunk++;
                 }
             }

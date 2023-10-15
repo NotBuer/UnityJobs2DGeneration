@@ -1,10 +1,6 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
-using Unity.Jobs.LowLevel.Unsafe;
 using UnityEngine;
 
 public class World : MonoBehaviour
@@ -73,28 +69,15 @@ public class World : MonoBehaviour
 
     void Start()
     {
-        CreateChunkCoordJob createChunksJob = new CreateChunkCoordJob
-        {
-            chunksCoordsNativeArray = ChunkCoordNativeArray,
-            worldMiddleX = _worldMiddleX,
-            worldMiddleY = _worldMiddleY,
-        };
+        CreateChunkCoordJob createChunksJob = new(_worldMiddleX, _worldMiddleY, ChunkCoordNativeArray);
         _jobHandleCreateChunkCoord = createChunksJob.Schedule();
         Debug.Log("WORLD - Scheduling generation of ChunkCoord...");
 
-        CreateTileCoordJob createTileCoordJob = new CreateTileCoordJob
-        {
-            chunksInTheWorld = ChunkCoordNativeArray.Length - 1,
-            tileCoordNativeArray = TileCoordNativeArray
-        };
+        CreateTileCoordJob createTileCoordJob = new(ChunkCoordNativeArray, TileCoordNativeArray);
         _jobHandleCreateTileCoord = createTileCoordJob.Schedule(_jobHandleCreateChunkCoord);
         Debug.Log("WORLD - Scheduling generation of TileCoord...");
 
-        CreateTileDataJob createTileDataJob = new CreateTileDataJob
-        {
-            chunksInTheWorld = ChunkCoordNativeArray.Length - 1,
-            tileDataNativeArray = TileDataNativeArray
-        };
+        CreateTileDataJob createTileDataJob = new(ChunkCoordNativeArray, TileDataNativeArray);
         _jobHandleCreateTileData = createTileDataJob.Schedule(_jobHandleCreateChunkCoord);
         Debug.Log("WORLD - Scheduling generation of TileData...");
 
@@ -151,31 +134,30 @@ public class World : MonoBehaviour
         Debug.Log("WORLD - Scheduling generation of World Chunks Mesh Data...");
         _jobHandleCreateWorldChunksMeshData = _jobHandleRawWorldDataGenerated;
 
-        for (int i = 0; i < ChunkCoordNativeArray.Length; i++) 
+        NativeArray<JobHandle> jobDependenciesHandleNativeArray = new NativeArray<JobHandle>(4, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+
+        for (int index = 0; index < ChunkCoordNativeArray.Length; index++) 
         {
-            NativeSlice<TileData> tileDataNativeSlice = new(TileDataNativeArray, (i * Chunk.TOTAL_SIZE) + i, Chunk.TOTAL_SIZE);
-            CreateChunkVerticesJob createChunkVerticesJob = new CreateChunkVerticesJob()
-            {
-                chunkCoord = ChunkCoordNativeArray[i],
-                tileDataNativeSlice = tileDataNativeSlice,
-                stride = i,
-                worldChunksVerticesNativeArray = WorldChunksVerticesNativeArray,
-            };
+            NativeSlice<TileData> tileDataNativeSlice = new(TileDataNativeArray, (index * Chunk.TOTAL_SIZE) + index, Chunk.TOTAL_SIZE);
+
+            CreateChunkVerticesJob createChunkVerticesJob = new(ChunkCoordNativeArray[index], tileDataNativeSlice, index, WorldChunksVerticesNativeArray);
             JobHandle jobHandleCreateVertices = createChunkVerticesJob.Schedule(_jobHandleCreateWorldChunksMeshData);
 
-            CreateChunkTrianglesJob createChunkTrianglesJob = new CreateChunkTrianglesJob()
-            {
-                chunkCoord = ChunkCoordNativeArray[i],
-                tileDataNativeSlice = tileDataNativeSlice,
-                stride = i,
-                worldChunksTrianglesArray = WorldChunksTrianglesNativeArray
-            };
+            CreateChunkTrianglesJob createChunkTrianglesJob = new(ChunkCoordNativeArray[index], tileDataNativeSlice, index, WorldChunksTrianglesNativeArray);
             JobHandle jobHandleCreateTriangles = createChunkTrianglesJob.Schedule(_jobHandleCreateWorldChunksMeshData);
 
-            _jobHandleCreateWorldChunksMeshData = JobHandle.CombineDependencies(_jobHandleCreateWorldChunksMeshData, jobHandleCreateVertices, jobHandleCreateTriangles);
+            CreateChunkUVSJob createChunkUVSJob = new(ChunkCoordNativeArray[index], tileDataNativeSlice, index, WorldChunksUVSNativeArray);
+            JobHandle jobHandleCreateUVS = createChunkUVSJob.Schedule(_jobHandleCreateWorldChunksMeshData);
+
+            jobDependenciesHandleNativeArray[0] = _jobHandleCreateWorldChunksMeshData;
+            jobDependenciesHandleNativeArray[1] = jobHandleCreateVertices;
+            jobDependenciesHandleNativeArray[2] = jobHandleCreateTriangles;
+            jobDependenciesHandleNativeArray[3] = jobHandleCreateUVS;
+            _jobHandleCreateWorldChunksMeshData = JobHandle.CombineDependencies(jobDependenciesHandleNativeArray);
         }
 
         _jobHandleCreateWorldChunksMeshData.Complete();
+        jobDependenciesHandleNativeArray.Dispose();
     }
 
     private void OnApplicationQuit()

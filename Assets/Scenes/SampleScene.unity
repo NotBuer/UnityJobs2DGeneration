@@ -371,12 +371,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b889ec9f14baff4a9b974a8e0ad4903, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  XSizeInChunks: 2
-  YSizeInChunks: 2
+  XSizeInChunks: 16
+  YSizeInChunks: 16
   DebugLogChunkCoordGeneration: 0
   DebugLogTileCoordGeneration: 0
   DebugLogTileDataGeneration: 0
-  DebugLogWorldChunksVerticesData: 1
+  DebugLogWorldChunksVerticesData: 0
   DebugLogWorldChunksTrianglesData: 0
   DebugLogWorldChunksUVSData: 0
 --- !u!4 &1008856646
