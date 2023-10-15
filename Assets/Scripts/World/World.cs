@@ -99,17 +99,6 @@ public class World : MonoBehaviour
         Debug.Log("WORLD - Scheduling generation of TileData...");
 
         _jobHandleRawWorldDataGenerated = JobHandle.CombineDependencies(_jobHandleCreateChunkCoord, _jobHandleCreateTileCoord, _jobHandleCreateTileData);
-
-        //CreateChunkMeshDataJob createChunkMeshDataJob = new CreateChunkMeshDataJob
-        //{
-        //    chunkCoordNativeArray = ChunkCoordNativeArray,
-        //    tileDataNativeArray = TileDataNativeArray,
-        //    worldChunksVerticesNativeArray = WorldChunksVerticesNativeArray,
-        //    worldChunksTrianglesNativeArray = WorldChunksTrianglesNativeArray,
-        //    worldChunksUVSNativeArray = WorldChunksUVSNativeArray
-        //};
-        //_jobHandleCreateWorldChunksMeshData = createChunkMeshDataJob.Schedule(_jobHandleCombineTileCoordTileData);
-        //Debug.Log("WORLD - Scheduling generation of World Chunks Mesh Data...");
     }
 
     private void LateUpdate()
