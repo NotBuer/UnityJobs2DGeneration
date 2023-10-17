@@ -2,7 +2,6 @@ using System.Numerics;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
-using UnityEngine;
 
 [BurstCompile]
 public struct CreateChunkTrianglesJob : IJob
@@ -10,31 +9,36 @@ public struct CreateChunkTrianglesJob : IJob
     [ReadOnly] public ChunkCoord _chunkCoord;
     [ReadOnly] public NativeSlice<TileData> _tileDataNativeSlice;
     [ReadOnly] public int _stride;
-    [WriteOnly] public NativeArray<int> _worldChunksTrianglesNativeArray;
+    [WriteOnly] public NativeArray<int> _chunksTrianglesNativeArray;
 
     public CreateChunkTrianglesJob(
         ChunkCoord chunkCoord,
         NativeSlice<TileData> tileDataNativeSlice,
         int stride,
-        NativeArray<int> worldChunksTrianglesNativeArray)
+        NativeArray<int> chunksTrianglesNativeArray)
     {
         _chunkCoord = chunkCoord;
         _tileDataNativeSlice = tileDataNativeSlice;
         _stride = stride;
-        _worldChunksTrianglesNativeArray = worldChunksTrianglesNativeArray;
+        _chunksTrianglesNativeArray = chunksTrianglesNativeArray;
     }
+
     public void Execute()
     {
-        int verticesBuffer = (Chunk.TOTAL_SIZE * Tile.TRIANGLES);
-        int start = _stride * verticesBuffer;
-        for (int i = start; i < verticesBuffer; i += Tile.TRIANGLES)
+        short vertexIndex = 0;
+        short triangleIndex = 0;
+        for (byte y = 0; y < Chunk.Y_SIZE; y++)
         {
-            _worldChunksTrianglesNativeArray[i + 0] = 0;
-            _worldChunksTrianglesNativeArray[i + 1] = 1;
-            _worldChunksTrianglesNativeArray[i + 2] = 2;
-            _worldChunksTrianglesNativeArray[i + 3] = 0;
-            _worldChunksTrianglesNativeArray[i + 4] = 2;
-            _worldChunksTrianglesNativeArray[i + 5] = 3;
+            for (byte x = 0; x < Chunk.X_SIZE; x++)
+            {
+                vertexIndex += Tile.VERTICES;
+                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 4; // 0
+                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 3; // 1
+                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 2; // 2
+                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 4; // 0
+                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 2; // 2
+                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 1; // 3
+            }
         }
     }
 }

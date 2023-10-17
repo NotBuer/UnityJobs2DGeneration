@@ -31,7 +31,7 @@ public static class DebugWorldGeneration
         }
     }
 
-    public static IEnumerator DebugWorldChunksVerticesData(NativeArray<Vector2Int> WorldChunksVerticesNativeArray)
+    public static IEnumerator DebugWorldChunksVerticesData(NativeArray<Vector3Int> WorldChunksVerticesNativeArray)
     {
         foreach (var vertex in WorldChunksVerticesNativeArray)
         {
