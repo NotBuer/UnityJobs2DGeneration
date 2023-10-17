@@ -25,15 +25,17 @@ public struct CreateChunkVerticesJob : IJob
 
     public void Execute()
     {
-        short verticeIndex = 0;
+        // TIP: Is possible to pass the '_chunkcoord' coordinates incrementing the vertex position,
+        // converting all chunk tiles from Local Position to World Space Position.
+        int verticeIndex = _stride * World.CHUNK_VERTEX_BUFFER_SIZE;
         for (byte y = 0; y < Chunk.Y_SIZE; y++)
         {
             for (byte x = 0; x < Chunk.X_SIZE; x++)
             {
-                _chunksVerticesNativeArray[verticeIndex++] = new Vector3Int(x, y);
-                _chunksVerticesNativeArray[verticeIndex++] = new Vector3Int(x, 1 + y);
-                _chunksVerticesNativeArray[verticeIndex++] = new Vector3Int(x + 1, y + 1);
-                _chunksVerticesNativeArray[verticeIndex++] = new Vector3Int(x + 1, y);
+                _chunksVerticesNativeArray[verticeIndex++] = new Vector3Int(x, y);          //(0, 0)
+                _chunksVerticesNativeArray[verticeIndex++] = new Vector3Int(x, 1 + y);      //(0, 1)
+                _chunksVerticesNativeArray[verticeIndex++] = new Vector3Int(x + 1, y + 1);  //(1, 1)
+                _chunksVerticesNativeArray[verticeIndex++] = new Vector3Int(x + 1, y);      //(1, 0)
             }
         }
     }

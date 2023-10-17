@@ -25,19 +25,19 @@ public struct CreateChunkTrianglesJob : IJob
 
     public void Execute()
     {
-        short vertexIndex = 0;
-        short triangleIndex = 0;
+        int triangleIndex = _stride * World.CHUNK_TRIANGLE_BUFFER_SIZE;
+        int vertexIndex = 0;
         for (byte y = 0; y < Chunk.Y_SIZE; y++)
         {
             for (byte x = 0; x < Chunk.X_SIZE; x++)
             {
                 vertexIndex += Tile.VERTICES;
-                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 4; // 0
-                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 3; // 1
-                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 2; // 2
-                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 4; // 0
-                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 2; // 2
-                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 1; // 3
+                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 4;   // 0
+                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 3;   // 1
+                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 2;   // 2
+                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 4;   // 0
+                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 2;   // 2
+                _chunksTrianglesNativeArray[triangleIndex++] = vertexIndex - 1;   // 3
             }
         }
     }

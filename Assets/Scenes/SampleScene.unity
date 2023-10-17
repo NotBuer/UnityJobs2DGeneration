@@ -254,7 +254,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalPosition: {x: 0, y: 0, z: -100}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -371,15 +371,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b889ec9f14baff4a9b974a8e0ad4903, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  XSizeInChunks: 2
-  YSizeInChunks: 2
+  XSizeInChunks: 32
+  YSizeInChunks: 8
   DebugLogChunkCoordGeneration: 0
   DebugLogTileCoordGeneration: 0
   DebugLogTileDataGeneration: 0
   DebugLogWorldChunksVerticesData: 0
   DebugLogWorldChunksTrianglesData: 0
   DebugLogWorldChunksUVSData: 0
-  PauseChunkMeshGeneration: 1
+  PauseChunkMeshGeneration: 0
 --- !u!4 &1008856646
 Transform:
   m_ObjectHideFlags: 0

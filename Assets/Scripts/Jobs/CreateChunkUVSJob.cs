@@ -25,15 +25,15 @@ public struct CreateChunkUVSJob : IJob
 
     public void Execute()
     {
-        short uvIndex = 0;
+        int uvIndex = _stride * World.CHUNK_UV_BUFFER_SIZE;
         for (byte y = 0; y < Chunk.Y_SIZE; y++)
         {
             for (byte x = 0; x < Chunk.X_SIZE; x++)
             {
-                _chunksUVSNativeArray[uvIndex++] = new Vector2(0, 0);
-                _chunksUVSNativeArray[uvIndex++] = new Vector2(0, 1);
-                _chunksUVSNativeArray[uvIndex++] = new Vector2(1, 1);
-                _chunksUVSNativeArray[uvIndex++] = new Vector2(1, 0);
+                _chunksUVSNativeArray[uvIndex++] = new Vector2(0, 0);   //(0, 0)
+                _chunksUVSNativeArray[uvIndex++] = new Vector2(0, 1);   //(0, 1)
+                _chunksUVSNativeArray[uvIndex++] = new Vector2(1, 1);   //(1, 1)
+                _chunksUVSNativeArray[uvIndex++] = new Vector2(1, 0);   //(1, 0)
             }
         }
     }

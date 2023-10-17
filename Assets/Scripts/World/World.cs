@@ -29,12 +29,7 @@ public class World : MonoBehaviour
     [SerializeField]
     private short YSizeInChunks;
 
-    [SerializeField] private bool DebugLogChunkCoordGeneration = false;
-    [SerializeField] private bool DebugLogTileCoordGeneration = false;
-    [SerializeField] private bool DebugLogTileDataGeneration = false;
-    [SerializeField] private bool DebugLogWorldChunksVerticesData = false;
-    [SerializeField] private bool DebugLogWorldChunksTrianglesData = false;
-    [SerializeField] private bool DebugLogWorldChunksUVSData = false;
+    [SerializeField] private bool UseAdvancedMeshAPI = false;
     [SerializeField] private bool PauseChunkMeshGeneration = false;
 
     private short _worldMiddleX = 0;
@@ -93,50 +88,6 @@ public class World : MonoBehaviour
         Debug.Log("WORLD - Scheduling generation of TileData...");
 
         _jobHandleRawWorldDataGenerated = JobHandle.CombineDependencies(_jobHandleCreateChunkCoord, _jobHandleCreateTileCoord, _jobHandleCreateTileData);
-
-        //Mesh mesh = new Mesh();
-
-        //Vector3[] verticesArray = new Vector3[CHUNK_VERTEX_BUFFER_SIZE];
-        //int[] trianglesArray = new int[CHUNK_TRIANGLE_BUFFER_SIZE];
-        //Vector2[] uvsArray = new Vector2[CHUNK_UV_BUFFER_SIZE];
-
-        //int vertexIndex = 0;
-        //int triangleIndex = 0;
-        //int uvIndex = 0;
-
-        //for (int y = 0; y < Chunk.Y_SIZE; y++)
-        //{
-        //    for (int x = 0; x < Chunk.X_SIZE; x++)
-        //    {
-        //        int xPos = x;
-        //        int yPos = y;
-
-        //        verticesArray[vertexIndex++] = new Vector3Int(xPos, yPos);
-        //        verticesArray[vertexIndex++] = new Vector3Int(xPos, yPos + 1);
-        //        verticesArray[vertexIndex++] = new Vector3Int(xPos + 1, yPos + 1);
-        //        verticesArray[vertexIndex++] = new Vector3Int(xPos + 1, yPos);
-
-        //        trianglesArray[triangleIndex++] = vertexIndex - 4; // 0
-        //        trianglesArray[triangleIndex++] = vertexIndex - 3; // 1
-        //        trianglesArray[triangleIndex++] = vertexIndex - 2; // 2
-        //        trianglesArray[triangleIndex++] = vertexIndex - 4; // 0
-        //        trianglesArray[triangleIndex++] = vertexIndex - 2; // 2
-        //        trianglesArray[triangleIndex++] = vertexIndex - 1; // 3
-
-        //        uvsArray[uvIndex++] = new Vector2(0, 0);
-        //        uvsArray[uvIndex++] = new Vector2(0, 1);
-        //        uvsArray[uvIndex++] = new Vector2(1, 1);
-        //        uvsArray[uvIndex++] = new Vector2(1, 0);
-        //    }
-        //}
-
-        //mesh.vertices = verticesArray;
-        //mesh.triangles = trianglesArray;
-        //mesh.uv = uvsArray;
-        //mesh.RecalculateBounds();
-
-        //gameObject.AddComponent<MeshFilter>().mesh = mesh;
-        //gameObject.AddComponent<MeshRenderer>();
     }
 
     private void LateUpdate()
@@ -148,7 +99,6 @@ public class World : MonoBehaviour
 
             Debug.Log("WORLD - ChunkCoords generated successfully!");
             Debug.Log($"WORLD - ChunkCoords array size: {ChunkCoordNativeArray.Length}");
-            if (DebugLogChunkCoordGeneration) StartCoroutine(DebugWorldGeneration.DebugCreateChunkCoord(ChunkCoordNativeArray));
         }
 
         if (_jobHandleCreateTileCoord.IsCompleted && !_createTileCoordsOnce)
@@ -158,7 +108,6 @@ public class World : MonoBehaviour
 
             Debug.Log("WORLD - TileCoord generated successfully!");
             Debug.Log($"WORLD - TileCoord array size: {TileCoordNativeArray.Length}");
-            if (DebugLogTileCoordGeneration) StartCoroutine(DebugWorldGeneration.DebugCreateTileCoord(TileCoordNativeArray));
         }
 
         if (_jobHandleCreateTileData.IsCompleted && !_createTileDataOnce)
@@ -168,7 +117,6 @@ public class World : MonoBehaviour
 
             Debug.Log("WORLD - TileData generated successfully!");
             Debug.Log($"WORLD - TileData array size: {TileDataNativeArray.Length}");
-            if (DebugLogTileDataGeneration) StartCoroutine(DebugWorldGeneration.DebugCreateTileData(TileDataNativeArray));
         }
 
         // Wait all world raw data be built, in order to start generating the chunks mesh data.
@@ -189,9 +137,6 @@ public class World : MonoBehaviour
             Debug.Log($"WORLD - Vertices array size: {ChunksVerticesNativeArray.Length}");
             Debug.Log($"WORLD - Triangles array size: {ChunksTrianglesNativeArray.Length}");
             Debug.Log($"WORLD - UVS array size: {ChunksUVSNativeArray.Length}");
-            if (DebugLogWorldChunksVerticesData) StartCoroutine(DebugWorldGeneration.DebugWorldChunksVerticesData(ChunksVerticesNativeArray));
-            if (DebugLogWorldChunksTrianglesData) StartCoroutine(DebugWorldGeneration.DebugWorldChunksTrianglesData(ChunksTrianglesNativeArray));
-            if (DebugLogWorldChunksUVSData) StartCoroutine(DebugWorldGeneration.DebugWorldChunksUVSData(ChunksUVSNativeArray));
         }
     }
 
@@ -228,62 +173,64 @@ public class World : MonoBehaviour
 
     private IEnumerator YieldedChunkMeshGeneration()
     {
-        //ChunkCoordNativeArray.Length
-        for (int i = 0; i <= 1; i++)
+        for (int i = 0; i < ChunkCoordNativeArray.Length; i++)
         {
             yield return new WaitWhile(() => PauseChunkMeshGeneration);
 
-            NativeSlice<Vector3Int> chunksVerticesArraySlice = ChunksVerticesNativeArray.Slice(
-                i * CHUNK_VERTEX_BUFFER_SIZE, 
+            if (!UseAdvancedMeshAPI)
+            {
+                NativeSlice<Vector3Int> chunksVerticesArraySlice = ChunksVerticesNativeArray.Slice(
+                i * CHUNK_VERTEX_BUFFER_SIZE,
                 CHUNK_VERTEX_BUFFER_SIZE);
 
-            NativeSlice<int> chunksTriangleArraySlice = ChunksTrianglesNativeArray.Slice(
-                i * CHUNK_TRIANGLE_BUFFER_SIZE,
-                CHUNK_TRIANGLE_BUFFER_SIZE);
+                NativeSlice<int> chunksTriangleArraySlice = ChunksTrianglesNativeArray.Slice(
+                    i * CHUNK_TRIANGLE_BUFFER_SIZE,
+                    CHUNK_TRIANGLE_BUFFER_SIZE);
 
-            NativeSlice<Vector2> chunksUVSArraySlice = ChunksUVSNativeArray.Slice(
-                i * CHUNK_UV_BUFFER_SIZE,
-                CHUNK_UV_BUFFER_SIZE);
+                NativeSlice<Vector2> chunksUVSArraySlice = ChunksUVSNativeArray.Slice(
+                    i * CHUNK_UV_BUFFER_SIZE,
+                    CHUNK_UV_BUFFER_SIZE);
 
-            Mesh chunkMesh = new();
+                Mesh chunkMesh = new()
+                {
+                    vertices = VectorUtils.ConvertArrayVector3IntToVector3(ref chunksVerticesArraySlice),
+                    triangles = chunksTriangleArraySlice.ToArray(),
+                    uv = chunksUVSArraySlice.ToArray()
+                };
 
-            chunkMesh.vertices = VectorUtils.ConvertArrayVector3IntToVector3(ref chunksVerticesArraySlice);
-            chunkMesh.triangles = chunksTriangleArraySlice.ToArray();
-            chunkMesh.uv = chunksUVSArraySlice.ToArray();
+                ChunkCoord chunkCoord = ChunkCoordNativeArray[i];
+                GameObject chunkGameObject = Instantiate(
+                    new GameObject($"Chunk - X:{chunkCoord.XCoord} / Y:{chunkCoord.YCoord}"),
+                    new Vector3(chunkCoord.XCoord, chunkCoord.YCoord), 
+                    Quaternion.identity, gameObject.transform);
+                chunkGameObject.AddComponent<MeshFilter>().mesh = chunkMesh;
+                chunkGameObject.AddComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
+                //chunkGameObject.transform.SetParent(transform);
+            } 
+            else
+            {
+                //mesh.SetVertexBufferParams((Chunk.TOTAL_SIZE * Tile.VERTICES) + Tile.VERTICES);
+                //mesh.SetVertexBufferData(
+                //    WorldChunksVerticesNativeArray,
+                //    i * (Chunk.TOTAL_SIZE * Tile.VERTICES),
+                //    0,
+                //    (Chunk.TOTAL_SIZE * Tile.VERTICES) + Tile.VERTICES,
+                //    0,
+                //    MeshUpdateFlags.DontRecalculateBounds);
 
-            ChunkCoord chunkCoord = ChunkCoordNativeArray[i];
-            GameObject chunkGameObject = Instantiate(new GameObject($"Chunk - X:{chunkCoord.XCoord} / Y:{chunkCoord.YCoord}"));
-            chunkGameObject.AddComponent<MeshFilter>().mesh = chunkMesh;
-            chunkGameObject.AddComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
-            chunkGameObject.transform.SetParent(transform);
+                //mesh.SetIndexBufferParams((Chunk.TOTAL_SIZE * Tile.TRIANGLES) + Tile.TRIANGLES, IndexFormat.UInt16);
+                //mesh.SetIndexBufferData(
+                //    WorldChunksTrianglesNativeArray,
+                //    i * (Chunk.TOTAL_SIZE * Tile.TRIANGLES),
+                //    0,
+                //    (Chunk.TOTAL_SIZE * Tile.TRIANGLES) + Tile.TRIANGLES,
+                //    MeshUpdateFlags.DontValidateIndices);
+
+                //SubMeshDescriptor subMeshDescriptor = new SubMeshDescriptor(0, (Chunk.TOTAL_SIZE * Tile.TRIANGLES) + Tile.TRIANGLES, MeshTopology.Triangles);
+                //mesh.SetSubMesh(0, subMeshDescriptor, MeshUpdateFlags.DontRecalculateBounds);    
+            }
 
             yield return null;
-
-            //mesh.vertices = worldChunksVerticesArraySlice.ToArray();
-
-            //mesh.SetVertices(WorldChunksVerticesNativeArray, i * (Chunk.TOTAL_SIZE * Tile.VERTICES), (Chunk.TOTAL_SIZE * Tile.VERTICES) + Tile.VERTICES);
-            //mesh.SetTriangles(trianglesArray, i * (Chunk.TOTAL_SIZE * Tile.TRIANGLES), (Chunk.TOTAL_SIZE * Tile.TRIANGLES) + Tile.TRIANGLES, 0, false);
-            //mesh.SetUVs(0, WorldChunksUVSNativeArray, i * (Chunk.TOTAL_SIZE * Tile.UVS), (Chunk.TOTAL_SIZE * Tile.UVS) + Tile.UVS);
-
-            //mesh.SetVertexBufferParams((Chunk.TOTAL_SIZE * Tile.VERTICES) + Tile.VERTICES);
-            //mesh.SetVertexBufferData(
-            //    WorldChunksVerticesNativeArray,
-            //    i * (Chunk.TOTAL_SIZE * Tile.VERTICES),
-            //    0,
-            //    (Chunk.TOTAL_SIZE * Tile.VERTICES) + Tile.VERTICES,
-            //    0,
-            //    MeshUpdateFlags.DontRecalculateBounds);
-
-            //mesh.SetIndexBufferParams((Chunk.TOTAL_SIZE * Tile.TRIANGLES) + Tile.TRIANGLES, IndexFormat.UInt16);
-            //mesh.SetIndexBufferData(
-            //    WorldChunksTrianglesNativeArray,
-            //    i * (Chunk.TOTAL_SIZE * Tile.TRIANGLES),
-            //    0,
-            //    (Chunk.TOTAL_SIZE * Tile.TRIANGLES) + Tile.TRIANGLES,
-            //    MeshUpdateFlags.DontValidateIndices);
-
-            //SubMeshDescriptor subMeshDescriptor = new SubMeshDescriptor(0, (Chunk.TOTAL_SIZE * Tile.TRIANGLES) + Tile.TRIANGLES, MeshTopology.Triangles);
-            //mesh.SetSubMesh(0, subMeshDescriptor, MeshUpdateFlags.DontRecalculateBounds);    
         }
     }
 
