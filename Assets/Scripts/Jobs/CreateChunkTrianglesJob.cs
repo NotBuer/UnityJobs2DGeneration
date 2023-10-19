@@ -8,24 +8,24 @@ public struct CreateChunkTrianglesJob : IJob
 {
     [ReadOnly] public ChunkCoord _chunkCoord;
     [ReadOnly] public NativeSlice<TileData> _tileDataNativeSlice;
-    [ReadOnly] public int _stride;
+    [ReadOnly] public int _chunkCoordIndex;
     [WriteOnly] public NativeArray<int> _chunksTrianglesNativeArray;
 
     public CreateChunkTrianglesJob(
         ChunkCoord chunkCoord,
         NativeSlice<TileData> tileDataNativeSlice,
-        int stride,
+        int chunkCoordIndex,
         NativeArray<int> chunksTrianglesNativeArray)
     {
         _chunkCoord = chunkCoord;
         _tileDataNativeSlice = tileDataNativeSlice;
-        _stride = stride;
+        _chunkCoordIndex = chunkCoordIndex;
         _chunksTrianglesNativeArray = chunksTrianglesNativeArray;
     }
 
     public void Execute()
     {
-        int triangleIndex = _stride * World.CHUNK_TRIANGLE_BUFFER_SIZE;
+        int triangleIndex = _chunkCoordIndex * World.CHUNK_TRIANGLE_ARRAY_LENGTH;
         int vertexIndex = 0;
         for (byte y = 0; y < Chunk.Y_SIZE; y++)
         {
