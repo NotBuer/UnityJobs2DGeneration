@@ -371,10 +371,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b889ec9f14baff4a9b974a8e0ad4903, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  XSizeInChunks: 2
-  YSizeInChunks: 2
-  UseAdvancedMeshAPI: 0
-  PauseChunkMeshGeneration: 1
+  XSizeInChunks: 16
+  YSizeInChunks: 16
+  UseAdvancedMeshAPI: 1
+  PauseChunkMeshGeneration: 0
 --- !u!4 &1008856646
 Transform:
   m_ObjectHideFlags: 0
