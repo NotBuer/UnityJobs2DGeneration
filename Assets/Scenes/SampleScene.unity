@@ -371,8 +371,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b889ec9f14baff4a9b974a8e0ad4903, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _XSizeInChunks: 2
-  _YSizeInChunks: 2
+  _XSizeInChunks: 32
+  _YSizeInChunks: 32
   _uploadMeshToGPUOnMeshBuilt: 0
   _useAdvancedMeshAPI: 1
   _pauseChunkMeshGeneration: 0

@@ -42,7 +42,6 @@ public struct CreateChunkUVSJob : IJob
 
         if (_useAdvancedMeshAPI)
         {
-            //_chunkMeshDataArray[_chunkCoordIndex].SetVertexBufferParams(VertexLayout.VERTEX_BUFFER_SIZE, _layout);
             bufferUVArray = _chunkMeshDataArray[_chunkCoordIndex].GetVertexData<VertexLayout>();
         }
         else bufferUVArray = new NativeArray<VertexLayout>(0, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
@@ -54,37 +53,53 @@ public struct CreateChunkUVSJob : IJob
         {
             for (byte x = 0; x < Chunk.X_SIZE; x++)
             {
+                TileData tileData = _tileDataNativeSlice[uvIndexFromStride];
+
+                var LeftBottomUV = SpriteAtlasUtils.GetUVTextureForTile(tileData);
+                var LeftTopUV = SpriteAtlasUtils.GetUVTextureForTile(tileData);
+                var RigthTopUV = SpriteAtlasUtils.GetUVTextureForTile(tileData);
+                var RigthBottomUV = SpriteAtlasUtils.GetUVTextureForTile(tileData);
+
                 if (_useAdvancedMeshAPI)
                 {
-                    VertexLayout LeftBottomCoord = bufferUVArray[uvArrayIndex];
-                    LeftBottomCoord._texCoordX = 0;
-                    LeftBottomCoord._textCoordY = 0;
-                    bufferUVArray[uvArrayIndex] = LeftBottomCoord;
+                    VertexLayout LeftBottom = bufferUVArray[uvArrayIndex];
+                    VertexLayout.MergeUVLayoutWrapper(LeftBottomUV, ref LeftBottom);
+                    bufferUVArray[uvArrayIndex] = LeftBottom;
 
-                    VertexLayout LeftTopCoord = bufferUVArray[uvArrayIndex + 1];
-                    LeftTopCoord._texCoordX = 0;
-                    LeftTopCoord._textCoordY = 1;
-                    bufferUVArray[uvArrayIndex + 1] = LeftTopCoord;
+                    //VertexLayout LeftBottom = bufferUVArray[uvArrayIndex];
+                    //LeftBottom._texCoordX = 0;
+                    //LeftBottom._texCoordY = 0;
+                    //bufferUVArray[uvArrayIndex] = LeftBottom;
 
-                    VertexLayout RigthTopCoord = bufferUVArray[uvArrayIndex + 2];
-                    RigthTopCoord._texCoordX = 1;
-                    RigthTopCoord._textCoordY = 1;
-                    bufferUVArray[uvArrayIndex + 2] = RigthTopCoord;
+                    VertexLayout LeftTop = bufferUVArray[uvArrayIndex + 1];
+                    VertexLayout.MergeUVLayoutWrapper(LeftTopUV, ref LeftTop);
+                    bufferUVArray[uvArrayIndex + 1] = LeftTop;
+                    //VertexLayout LeftTop = bufferUVArray[uvArrayIndex + 1];
+                    //LeftTop._texCoordX = 0;
+                    //LeftTop._texCoordY = 1;
+                    //bufferUVArray[uvArrayIndex + 1] = LeftTop;
 
-                    VertexLayout RigthBottomCoord = bufferUVArray[uvArrayIndex + 3];
-                    RigthBottomCoord._texCoordX = 1;
-                    RigthBottomCoord._textCoordY = 0;
-                    bufferUVArray[uvArrayIndex + 3] = RigthBottomCoord;
+                    VertexLayout RigthTop = bufferUVArray[uvArrayIndex + 2];
+                    VertexLayout.MergeUVLayoutWrapper(RigthTopUV, ref RigthTop);
+                    bufferUVArray[uvArrayIndex + 2] = RigthTop;
+                    //VertexLayout RigthTop = bufferUVArray[uvArrayIndex + 2];
+                    //RigthTop._texCoordX = 1;
+                    //RigthTop._texCoordY = 1;
+                    //bufferUVArray[uvArrayIndex + 2] = RigthTop;
+
+                    VertexLayout RigthBottom = bufferUVArray[uvArrayIndex + 3];
+                    VertexLayout.MergeUVLayoutWrapper(RigthBottomUV, ref RigthBottom);
+                    bufferUVArray[uvArrayIndex + 3] = RigthBottom;
+                    //VertexLayout RigthBottom = bufferUVArray[uvArrayIndex + 3];
+                    //RigthBottom._texCoordX = 1;
+                    //RigthBottom._texCoordY = 0;
+                    //bufferUVArray[uvArrayIndex + 3] = RigthBottom;
 
                     uvArrayIndex += Tile.UVS;
-
-                    //bufferUVArray[uvArrayIndex++] = new Vector2(0, 0);   //(0, 0)
-                    //bufferUVArray[uvArrayIndex++] = new Vector2(0, 1);   //(0, 1)
-                    //bufferUVArray[uvArrayIndex++] = new Vector2(1, 1);   //(1, 1)
-                    //bufferUVArray[uvArrayIndex++] = new Vector2(1, 0);   //(1, 0)
                     continue;
                 }
 
+                // TODO: Aplicar pattern VertexLayoutWrapper...
                 _chunksUVSNativeArray[uvIndexFromStride++] = new Vector2(0, 0);   //(0, 0)
                 _chunksUVSNativeArray[uvIndexFromStride++] = new Vector2(0, 1);   //(0, 1)
                 _chunksUVSNativeArray[uvIndexFromStride++] = new Vector2(1, 1);   //(1, 1)

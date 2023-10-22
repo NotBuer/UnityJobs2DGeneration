@@ -72,16 +72,6 @@ public struct CreateChunkVerticesJob : IJob
                     bufferVertexArray[vertexArrayIndex + 3] = RigthBottomCoord;
 
                     vertexArrayIndex += Tile.VERTICES;
-
-                    //bufferVertexArray[vertexArrayIndex++] = new VertexLayout { _position = new Vector3(x, y) };         //(0, 0)
-                    //bufferVertexArray[vertexArrayIndex++] = new VertexLayout { _position = new Vector3(x, 1 + y) };;    //(0, 1)
-                    //bufferVertexArray[vertexArrayIndex++] = new VertexLayout { _position = new Vector3(x + 1, y + 1) }; //(1, 1)
-                    //bufferVertexArray[vertexArrayIndex++] = new VertexLayout { _position = new Vector3(x + 1, y) };     //(1, 0)
-
-                    //bufferVertexArray[vertexArrayIndex++] = new Vector3(x, y);          //(0, 0)
-                    //bufferVertexArray[vertexArrayIndex++] = new Vector3(x, 1 + y);      //(0, 1)
-                    //bufferVertexArray[vertexArrayIndex++] = new Vector3(x + 1, y + 1);  //(1, 1)
-                    //bufferVertexArray[vertexArrayIndex++] = new Vector3(x + 1, y);      //(1, 0)
                     continue;
                 }
 

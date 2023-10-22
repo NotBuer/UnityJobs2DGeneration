@@ -12,9 +12,9 @@ public class World : MonoBehaviour
     private const ushort WORLD_X_SIZE = 1024;
     private const ushort WORLD_Y_SIZE = 1024;
 
-    public const ushort VERTEX_BUFFER_SIZE = Chunk.TOTAL_SIZE * Tile.VERTICES;
-    public const ushort TRIANGLE_BUFFER_SIZE = Chunk.TOTAL_SIZE * Tile.TRIANGLES;
-    public const ushort UV_BUFFER_SIZE = Chunk.TOTAL_SIZE * Tile.UVS;
+    //public const ushort VERTEX_BUFFER_SIZE = Chunk.TOTAL_SIZE * Tile.VERTICES;
+    //public const ushort TRIANGLE_BUFFER_SIZE = Chunk.TOTAL_SIZE * Tile.TRIANGLES;
+    //public const ushort UV_BUFFER_SIZE = Chunk.TOTAL_SIZE * Tile.UVS;
 
     [Header("Debugging")]
 
@@ -37,7 +37,7 @@ public class World : MonoBehaviour
     public NativeArray<TileCoord> TileCoordNativeArray { get; set; }
     public NativeArray<TileData> TileDataNativeArray { get; set; }
     public NativeArray<Vector3> ChunksVerticesNativeArray { get; set; }
-    public NativeArray<int> ChunksTrianglesNativeArray { get; set; }
+    public NativeArray<int> ChunksIndicesNativeArray { get; set; }
     public NativeArray<Vector2> ChunksUVSNativeArray { get; set; }
     public Mesh.MeshDataArray ChunkMeshDataArray { get; set; }
 
@@ -63,19 +63,19 @@ public class World : MonoBehaviour
         if (_useAdvancedMeshAPI)
         {
             ChunksVerticesNativeArray = new(0, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
-            ChunksTrianglesNativeArray = new(0, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+            ChunksIndicesNativeArray = new(0, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
             ChunksUVSNativeArray = new(0, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
             ChunkMeshDataArray = Mesh.AllocateWritableMeshData(ChunkCoordNativeArray.Length);
         }
         else
         {
-            ChunksVerticesNativeArray = new((_XSizeInChunks * _YSizeInChunks) * VERTEX_BUFFER_SIZE,
+            ChunksVerticesNativeArray = new((_XSizeInChunks * _YSizeInChunks) * VertexLayout.VERTEX_BUFFER_SIZE,
                 Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
 
-            ChunksTrianglesNativeArray = new((_XSizeInChunks * _YSizeInChunks) * TRIANGLE_BUFFER_SIZE,
+            ChunksIndicesNativeArray = new((_XSizeInChunks * _YSizeInChunks) * VertexLayout.INDEX_BUFFER_SIZE,
                 Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
 
-            ChunksUVSNativeArray = new((_XSizeInChunks * _YSizeInChunks) * UV_BUFFER_SIZE,
+            ChunksUVSNativeArray = new((_XSizeInChunks * _YSizeInChunks) * VertexLayout.VERTEX_BUFFER_SIZE,
                 Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
 
             ChunkMeshDataArray = Mesh.AllocateWritableMeshData(0);
@@ -146,9 +146,12 @@ public class World : MonoBehaviour
             StartCoroutine(YieldedChunkMeshGeneration());
 
             Debug.Log("WORLD - World Chunks Mesh Data generated successfully!");
-            Debug.Log($"WORLD - Vertices array size: {ChunksVerticesNativeArray.Length}");
-            Debug.Log($"WORLD - Triangles array size: {ChunksTrianglesNativeArray.Length}");
-            Debug.Log($"WORLD - UVS array size: {ChunksUVSNativeArray.Length}");
+            if(!_useAdvancedMeshAPI)
+            {
+                Debug.Log($"WORLD - Vertices array size: {ChunksVerticesNativeArray.Length}");
+                Debug.Log($"WORLD - Triangles array size: {ChunksIndicesNativeArray.Length}");
+                Debug.Log($"WORLD - UVS array size: {ChunksUVSNativeArray.Length}");
+            }
         }
     }
 
@@ -178,15 +181,15 @@ public class World : MonoBehaviour
 
 
             // Start the job to create the triangles independently from the other.
-            CreateChunkTrianglesJob createChunkTrianglesJob = 
-                new(ChunkCoordNativeArray[i], tileDataNativeSlice, i, ChunksTrianglesNativeArray, ChunkMeshDataArray, _useAdvancedMeshAPI);
-            JobHandle jobHandleCreateTriangles = createChunkTrianglesJob.Schedule(jobHandleCreateUVS);
+            CreateChunkIndicesJob createChunkIndicesJob = 
+                new(ChunkCoordNativeArray[i], tileDataNativeSlice, i, ChunksIndicesNativeArray, ChunkMeshDataArray, _useAdvancedMeshAPI);
+            JobHandle jobHandleCreateIndices = createChunkIndicesJob.Schedule(jobHandleCreateUVS);
 
             // Handle get all jobHandles and combine all dependencies of them before proceeding.
             jobDependenciesHandleNativeArray[0] = _jobHandleCreateWorldChunksMeshData;
             jobDependenciesHandleNativeArray[1] = jobHandleCreateVertices;
             jobDependenciesHandleNativeArray[2] = jobHandleCreateUVS;
-            jobDependenciesHandleNativeArray[3] = jobHandleCreateTriangles;
+            jobDependenciesHandleNativeArray[3] = jobHandleCreateIndices;
             _jobHandleCreateWorldChunksMeshData = JobHandle.CombineDependencies(jobDependenciesHandleNativeArray);
         }
 
@@ -211,7 +214,7 @@ public class World : MonoBehaviour
                 meshData.subMeshCount = 1;
                 meshData.SetSubMesh(
                     0,
-                    new SubMeshDescriptor(0, TRIANGLE_BUFFER_SIZE, MeshTopology.Triangles),
+                    new SubMeshDescriptor(0, VertexLayout.INDEX_BUFFER_SIZE, MeshTopology.Triangles),
                     MeshUpdateFlags.DontValidateIndices
                 );
                 GameObject chunkGameObject = Instantiate(
@@ -224,15 +227,22 @@ public class World : MonoBehaviour
             }
             else
             {
-                NativeSlice<int> chunkTriangleArraySlice = ChunksTrianglesNativeArray.Slice(
-                    index * TRIANGLE_BUFFER_SIZE,
-                    TRIANGLE_BUFFER_SIZE);
+                NativeSlice<int> chunkTriangleArraySlice = ChunksIndicesNativeArray.Slice(
+                    index * VertexLayout.INDEX_BUFFER_SIZE,
+                    VertexLayout.INDEX_BUFFER_SIZE
+                );
 
                 NativeSlice<Vector2> chunkUVSArraySlice = ChunksUVSNativeArray.Slice(
-                    index * UV_BUFFER_SIZE,
-                    UV_BUFFER_SIZE);
+                    index * VertexLayout.VERTEX_BUFFER_SIZE,
+                    VertexLayout.VERTEX_BUFFER_SIZE
+                );
 
-                mesh.SetVertices(ChunksVerticesNativeArray, index * VERTEX_BUFFER_SIZE, VERTEX_BUFFER_SIZE, MeshUpdateFlags.DontValidateIndices);
+                mesh.SetVertices(
+                    ChunksVerticesNativeArray, 
+                    index * VertexLayout.VERTEX_BUFFER_SIZE, 
+                    VertexLayout.VERTEX_BUFFER_SIZE, 
+                    MeshUpdateFlags.DontValidateIndices
+                );
                 mesh.triangles = chunkTriangleArraySlice.ToArray();
                 mesh.uv = chunkUVSArraySlice.ToArray();
 
@@ -251,7 +261,7 @@ public class World : MonoBehaviour
         }
 
         if (_useAdvancedMeshAPI)
-            Mesh.ApplyAndDisposeWritableMeshData(ChunkMeshDataArray, meshList, MeshUpdateFlags.DontRecalculateBounds);
+            Mesh.ApplyAndDisposeWritableMeshData(ChunkMeshDataArray, meshList, MeshUpdateFlags.DontValidateIndices);
     }
 
     private void OnApplicationQuit()
@@ -262,7 +272,7 @@ public class World : MonoBehaviour
         if (!_useAdvancedMeshAPI)
         {
             ChunksVerticesNativeArray.Dispose();
-            ChunksTrianglesNativeArray.Dispose();
+            ChunksIndicesNativeArray.Dispose();
             ChunksUVSNativeArray.Dispose();
         }
     }
