@@ -59,19 +59,19 @@ public struct CreateChunkUVSJob : IJob
                     VertexLayout LeftBottomCoord = bufferUVArray[uvArrayIndex];
                     LeftBottomCoord._texCoordX = 0;
                     LeftBottomCoord._textCoordY = 0;
-                    bufferUVArray[uvArrayIndex + 0] = LeftBottomCoord;
+                    bufferUVArray[uvArrayIndex] = LeftBottomCoord;
 
-                    VertexLayout LeftTopCoord = bufferUVArray[uvArrayIndex];
+                    VertexLayout LeftTopCoord = bufferUVArray[uvArrayIndex + 1];
                     LeftTopCoord._texCoordX = 0;
                     LeftTopCoord._textCoordY = 1;
                     bufferUVArray[uvArrayIndex + 1] = LeftTopCoord;
 
-                    VertexLayout RigthTopCoord = bufferUVArray[uvArrayIndex];
+                    VertexLayout RigthTopCoord = bufferUVArray[uvArrayIndex + 2];
                     RigthTopCoord._texCoordX = 1;
                     RigthTopCoord._textCoordY = 1;
                     bufferUVArray[uvArrayIndex + 2] = RigthTopCoord;
 
-                    VertexLayout RigthBottomCoord = bufferUVArray[uvArrayIndex];
+                    VertexLayout RigthBottomCoord = bufferUVArray[uvArrayIndex + 3];
                     RigthBottomCoord._texCoordX = 1;
                     RigthBottomCoord._textCoordY = 0;
                     bufferUVArray[uvArrayIndex + 3] = RigthBottomCoord;

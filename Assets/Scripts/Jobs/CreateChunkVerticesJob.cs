@@ -42,7 +42,7 @@ public struct CreateChunkVerticesJob : IJob
 
         if (_useAdvancedMeshAPI)
         {
-            //_chunkMeshDataArray[_chunkCoordIndex].SetVertexBufferParams(VertexLayout.VERTEX_BUFFER_SIZE, _layout);
+            _chunkMeshDataArray[_chunkCoordIndex].SetVertexBufferParams(VertexLayout.VERTEX_BUFFER_SIZE, _layout);
             bufferVertexArray = _chunkMeshDataArray[_chunkCoordIndex].GetVertexData<VertexLayout>();
         } 
         else bufferVertexArray = new NativeArray<VertexLayout>(0, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
@@ -57,19 +57,21 @@ public struct CreateChunkVerticesJob : IJob
                 {
                     VertexLayout LeftBottomCoord = bufferVertexArray[vertexArrayIndex];
                     LeftBottomCoord._position = new Vector3(x, y);
-                    bufferVertexArray[vertexArrayIndex + 0] = LeftBottomCoord;
+                    bufferVertexArray[vertexArrayIndex] = LeftBottomCoord;
 
-                    VertexLayout LeftTopCoord = bufferVertexArray[vertexArrayIndex];
+                    VertexLayout LeftTopCoord = bufferVertexArray[vertexArrayIndex + 1];
                     LeftTopCoord._position = new Vector3(x, 1 + y);
                     bufferVertexArray[vertexArrayIndex + 1] = LeftTopCoord;
 
-                    VertexLayout RigthTopCoord = bufferVertexArray[vertexArrayIndex];
+                    VertexLayout RigthTopCoord = bufferVertexArray[vertexArrayIndex + 2];
                     RigthTopCoord._position = new Vector3(x + 1, y + 1);
                     bufferVertexArray[vertexArrayIndex + 2] = RigthTopCoord;
 
-                    VertexLayout RigthBottomCoord = bufferVertexArray[vertexArrayIndex];
+                    VertexLayout RigthBottomCoord = bufferVertexArray[vertexArrayIndex + 3];
                     RigthBottomCoord._position = new Vector3(x + 1, y);
                     bufferVertexArray[vertexArrayIndex + 3] = RigthBottomCoord;
+
+                    vertexArrayIndex += Tile.VERTICES;
 
                     //bufferVertexArray[vertexArrayIndex++] = new VertexLayout { _position = new Vector3(x, y) };         //(0, 0)
                     //bufferVertexArray[vertexArrayIndex++] = new VertexLayout { _position = new Vector3(x, 1 + y) };;    //(0, 1)

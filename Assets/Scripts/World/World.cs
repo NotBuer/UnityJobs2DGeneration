@@ -5,7 +5,6 @@ using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Rendering;
-using static UnityEngine.UIElements.UxmlAttributeDescription;
 
 public class World : MonoBehaviour
 {
@@ -72,10 +71,13 @@ public class World : MonoBehaviour
         {
             ChunksVerticesNativeArray = new((_XSizeInChunks * _YSizeInChunks) * VERTEX_BUFFER_SIZE,
                 Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+
             ChunksTrianglesNativeArray = new((_XSizeInChunks * _YSizeInChunks) * TRIANGLE_BUFFER_SIZE,
                 Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+
             ChunksUVSNativeArray = new((_XSizeInChunks * _YSizeInChunks) * UV_BUFFER_SIZE,
                 Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+
             ChunkMeshDataArray = Mesh.AllocateWritableMeshData(0);
         }
 
@@ -157,44 +159,27 @@ public class World : MonoBehaviour
 
         NativeArray<JobHandle> jobDependenciesHandleNativeArray = new(4, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
 
-        //NativeArray<VertexAttributeDescriptor> vertexLayoutArray = new(1, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-        //vertexLayoutArray[0] = new(VertexAttribute.Position, VertexAttributeFormat.Float32, 3);
-
-        //NativeArray<VertexAttributeDescriptor> uvLayoutArray = new(1, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-        //uvLayoutArray[0] = new(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2);
-
-        //NativeArray<VertexAttributeDescriptor> bufferLayout = new(2, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-        //bufferLayout[0] = new(VertexAttribute.Position, VertexAttributeFormat.Float32, 3, 0);
-        //bufferLayout[1] = new(VertexAttribute.TexCoord0, VertexAttributeFormat.Float16, 2, 0);
-
         NativeArray<VertexAttributeDescriptor> bufferLayout = new(VertexLayout.DefinedVertexLayout(), Allocator.TempJob);
 
-        for (int index = 0; index < ChunkCoordNativeArray.Length; index++) 
+        for (int i = 0; i < ChunkCoordNativeArray.Length; i++) 
         {
-            NativeSlice<TileData> tileDataNativeSlice = new(TileDataNativeArray, index * Chunk.TOTAL_SIZE, Chunk.TOTAL_SIZE);
-
-            ChunkMeshDataArray[index].SetVertexBufferParams(VertexLayout.VERTEX_BUFFER_SIZE, bufferLayout);
-            ChunkMeshDataArray[index].SetIndexBufferParams(VertexLayout.INDEX_BUFFER_SIZE, IndexFormat.UInt32);
+            NativeSlice<TileData> tileDataNativeSlice = new(TileDataNativeArray, i * Chunk.TOTAL_SIZE, Chunk.TOTAL_SIZE);
 
             // First start the job to create the vertices.
             CreateChunkVerticesJob createChunkVerticesJob = 
-                new(ChunkCoordNativeArray[index], tileDataNativeSlice, index, ChunksVerticesNativeArray, ChunkMeshDataArray, bufferLayout, _useAdvancedMeshAPI);
+                new(ChunkCoordNativeArray[i], tileDataNativeSlice, i, ChunksVerticesNativeArray, ChunkMeshDataArray, bufferLayout, _useAdvancedMeshAPI);
             JobHandle jobHandleCreateVertices = createChunkVerticesJob.Schedule(_jobHandleCreateWorldChunksMeshData);
 
 
-            //NativeArray<Vector2> bufferUVArray;
-            //if (_useAdvancedMeshAPI) { bufferUVArray = new NativeArray<Vector2>(VERTEX_BUFFER_SIZE + UV_BUFFER_SIZE, Allocator.Persistent, NativeArrayOptions.UninitializedMemory); }
-            //else { bufferUVArray = new NativeArray<Vector2>(0, Allocator.TempJob, NativeArrayOptions.UninitializedMemory); }
-
             // Schedule the job to create the UVs when the job that will create the vertices finish.
             CreateChunkUVSJob createChunkUVSJob =
-                new(ChunkCoordNativeArray[index], tileDataNativeSlice, index, ChunksUVSNativeArray, ChunkMeshDataArray, bufferLayout, _useAdvancedMeshAPI);
+                new(ChunkCoordNativeArray[i], tileDataNativeSlice, i, ChunksUVSNativeArray, ChunkMeshDataArray, bufferLayout, _useAdvancedMeshAPI);
             JobHandle jobHandleCreateUVS = createChunkUVSJob.Schedule(jobHandleCreateVertices);
 
 
             // Start the job to create the triangles independently from the other.
             CreateChunkTrianglesJob createChunkTrianglesJob = 
-                new(ChunkCoordNativeArray[index], tileDataNativeSlice, index, ChunksTrianglesNativeArray, ChunkMeshDataArray, _useAdvancedMeshAPI);
+                new(ChunkCoordNativeArray[i], tileDataNativeSlice, i, ChunksTrianglesNativeArray, ChunkMeshDataArray, _useAdvancedMeshAPI);
             JobHandle jobHandleCreateTriangles = createChunkTrianglesJob.Schedule(jobHandleCreateUVS);
 
             // Handle get all jobHandles and combine all dependencies of them before proceeding.
@@ -203,21 +188,11 @@ public class World : MonoBehaviour
             jobDependenciesHandleNativeArray[2] = jobHandleCreateUVS;
             jobDependenciesHandleNativeArray[3] = jobHandleCreateTriangles;
             _jobHandleCreateWorldChunksMeshData = JobHandle.CombineDependencies(jobDependenciesHandleNativeArray);
-
-            //bufferUVArray.Dispose(_jobHandleCreateWorldChunksMeshData);
-            //if (!_useAdvancedMeshAPI) { bufferUVArray.Dispose(); }
-
-            //jobDependenciesHandleNativeArray[0] = _jobHandleCreateWorldChunksMeshData;
-            //jobDependenciesHandleNativeArray[1] = jobHandleCreateTriangles;
-            //_jobHandleCreateWorldChunksMeshData = JobHandle.CombineDependencies(jobDependenciesHandleNativeArray);
         }
 
         _jobHandleCreateWorldChunksMeshData.Complete();
+        bufferLayout.Dispose(_jobHandleCreateWorldChunksMeshData);
         jobDependenciesHandleNativeArray.Dispose();
-
-        //vertexLayoutArray.Dispose();
-        //uvLayoutArray.Dispose();
-        bufferLayout.Dispose();
     }
 
     private IEnumerator YieldedChunkMeshGeneration()

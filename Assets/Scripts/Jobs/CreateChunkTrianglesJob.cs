@@ -2,6 +2,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 [BurstCompile]
 public struct CreateChunkTrianglesJob : IJob
@@ -35,14 +36,12 @@ public struct CreateChunkTrianglesJob : IJob
 
         if (_useAdvancedMeshAPI)
         {
-            //_chunkMeshDataArray[_chunkCoordIndex].SetIndexBufferParams(
-            //    World.TRIANGLE_BUFFER_SIZE,
-            //    UnityEngine.Rendering.IndexFormat.UInt32);
+            _chunkMeshDataArray[_chunkCoordIndex].SetIndexBufferParams(VertexLayout.INDEX_BUFFER_SIZE, IndexFormat.UInt16);
             bufferTrianglesArray = _chunkMeshDataArray[_chunkCoordIndex].GetIndexData<int>();
         }
         else bufferTrianglesArray = new(0, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
 
-        int triangleIndexFromStride = _chunkCoordIndex * World.TRIANGLE_BUFFER_SIZE;
+        int triangleIndexFromStride = _chunkCoordIndex * VertexLayout.INDEX_BUFFER_SIZE;
         int triangleArrayIndex = 0;
         int vertexIndex = 0;
 

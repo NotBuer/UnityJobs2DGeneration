@@ -373,8 +373,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _XSizeInChunks: 2
   _YSizeInChunks: 2
-  _uploadMeshToGPUOnMeshBuilt: 1
-  _useAdvancedMeshAPI: 0
+  _uploadMeshToGPUOnMeshBuilt: 0
+  _useAdvancedMeshAPI: 1
   _pauseChunkMeshGeneration: 0
 --- !u!4 &1008856646
 Transform:
