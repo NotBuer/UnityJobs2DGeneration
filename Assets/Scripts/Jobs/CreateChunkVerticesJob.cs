@@ -45,7 +45,7 @@ public struct CreateChunkVerticesJob : IJob
             _chunkMeshDataArray[_chunkCoordIndex].SetVertexBufferParams(VertexLayout.VERTEX_BUFFER_SIZE, _layout);
             bufferVertexArray = _chunkMeshDataArray[_chunkCoordIndex].GetVertexData<VertexLayout>();
         } 
-        else bufferVertexArray = new NativeArray<VertexLayout>(0, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
+        else bufferVertexArray = new(0, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
 
         int vertexIndexFromStride = _chunkCoordIndex * VertexLayout.VERTEX_BUFFER_SIZE;
         int vertexArrayIndex = 0;

@@ -29,6 +29,7 @@ public class World : MonoBehaviour
     [SerializeField] private bool _uploadMeshToGPUOnMeshBuilt = false;
     [SerializeField] private bool _useAdvancedMeshAPI = false;
     [SerializeField] private bool _pauseChunkMeshGeneration = false;
+    [SerializeField] private Material _atlasMaterial;
 
     private short _worldMiddleX = 0;
     private short _worldMiddleY = 0;
@@ -166,7 +167,7 @@ public class World : MonoBehaviour
 
         for (int i = 0; i < ChunkCoordNativeArray.Length; i++) 
         {
-            NativeSlice<TileData> tileDataNativeSlice = new(TileDataNativeArray, i * Chunk.TOTAL_SIZE, Chunk.TOTAL_SIZE);
+            NativeSlice<TileData> tileDataNativeSlice = TileDataNativeArray.Slice(i * Chunk.TOTAL_SIZE, Chunk.TOTAL_SIZE);
 
             // First start the job to create the vertices.
             CreateChunkVerticesJob createChunkVerticesJob = 
@@ -176,7 +177,7 @@ public class World : MonoBehaviour
 
             // Schedule the job to create the UVs when the job that will create the vertices finish.
             CreateChunkUVSJob createChunkUVSJob =
-                new(ChunkCoordNativeArray[i], tileDataNativeSlice, i, ChunksUVSNativeArray, ChunkMeshDataArray, bufferLayout, _useAdvancedMeshAPI);
+                new(ChunkCoordNativeArray[i], tileDataNativeSlice, i, ChunksUVSNativeArray, ChunkMeshDataArray, _useAdvancedMeshAPI);
             JobHandle jobHandleCreateUVS = createChunkUVSJob.Schedule(jobHandleCreateVertices);
 
 
@@ -205,7 +206,6 @@ public class World : MonoBehaviour
         {
             yield return new WaitWhile(() => _pauseChunkMeshGeneration);
 
-            ChunkCoord chunkCoord = ChunkCoordNativeArray[index];
             Mesh mesh = new();
 
             if (_useAdvancedMeshAPI)
@@ -217,12 +217,6 @@ public class World : MonoBehaviour
                     new SubMeshDescriptor(0, VertexLayout.INDEX_BUFFER_SIZE, MeshTopology.Triangles),
                     MeshUpdateFlags.DontValidateIndices
                 );
-                GameObject chunkGameObject = Instantiate(
-                  new GameObject($"Chunk - X:{chunkCoord.XCoord} / Y:{chunkCoord.YCoord}"),
-                  new Vector3(chunkCoord.XCoord, chunkCoord.YCoord),
-                  Quaternion.identity, gameObject.transform);
-                chunkGameObject.AddComponent<MeshFilter>().mesh = mesh;
-                chunkGameObject.AddComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
                 meshList.Add(mesh);
             }
             else
@@ -245,20 +239,36 @@ public class World : MonoBehaviour
                 );
                 mesh.triangles = chunkTriangleArraySlice.ToArray();
                 mesh.uv = chunkUVSArraySlice.ToArray();
-
-                GameObject chunkGameObject = Instantiate(
-                    new GameObject($"Chunk - X:{chunkCoord.XCoord} / Y:{chunkCoord.YCoord}"),
-                    new Vector3(chunkCoord.XCoord, chunkCoord.YCoord), 
-                    Quaternion.identity, gameObject.transform);
-                chunkGameObject.AddComponent<MeshFilter>().mesh = mesh;
-                chunkGameObject.AddComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
             }
+
+            ChunkCoord chunkCoord = ChunkCoordNativeArray[index];
+            GameObject chunkGameObject = Instantiate(
+              new GameObject($"Chunk - X:{chunkCoord.XCoord} / Y:{chunkCoord.YCoord}"),
+              new Vector3(chunkCoord.XCoord, chunkCoord.YCoord),
+              Quaternion.identity, gameObject.transform);
+
+            MeshFilter meshFilter = chunkGameObject.AddComponent<MeshFilter>();
+            meshFilter.sharedMesh = mesh;
+
+            MeshRenderer meshRenderer = chunkGameObject.AddComponent<MeshRenderer>();
+            meshRenderer.material = _atlasMaterial;
+            meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
 
             yield return null;
 
             if (_uploadMeshToGPUOnMeshBuilt) mesh.UploadMeshData(true);
             else mesh.UploadMeshData(false);
         }
+
+        // DEBUG PURPOSES
+        //for (int i = 0; i < ChunkMeshDataArray.Length; i++)
+        //{
+        //    NativeArray<VertexLayout> array = ChunkMeshDataArray[i].GetVertexData<VertexLayout>();
+        //    for (int j = 0; j < array.Length; j++)
+        //    {
+        //        VertexLayout vertexLayout = array[j];
+        //    }
+        //}
 
         if (_useAdvancedMeshAPI)
             Mesh.ApplyAndDisposeWritableMeshData(ChunkMeshDataArray, meshList, MeshUpdateFlags.DontValidateIndices);

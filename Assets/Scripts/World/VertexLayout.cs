@@ -9,10 +9,7 @@ public struct VertexLayout
     public const ushort INDEX_BUFFER_SIZE = Chunk.TOTAL_SIZE * Tile.TRIANGLES;
 
     public Vector3 _position;
-    public ushort _texCoordX, _texCoordY;
-
-    // TODO: Refactor all over the system to use half (Float16 Bit), instead of ushort, in order to correct UV Mapping...
-    // Example -> public half _texCoordX, _texCoordY;
+    public half _texCoordX, _texCoordY;
 
     public static VertexAttributeDescriptor[] DefinedVertexLayout()
     {
@@ -23,31 +20,31 @@ public struct VertexLayout
         };
     }
 
-    public static void MergePositionLayoutWrapper(PositionLayoutWrapper positionLayout, ref VertexLayout vertexLayout)
+    public static void MergePositionLayoutWrapper(ref PositionLayout positionLayout, ref VertexLayout vertexLayout)
         => vertexLayout._position = positionLayout._position;
 
-    public static void MergeUVLayoutWrapper(UVLayoutWrapper UVLayout, ref VertexLayout vertexLayout)
+    public static void MergeUVLayoutWrapper(ref UVLayout UVLayout, ref VertexLayout vertexLayout)
     {
         vertexLayout._texCoordX = UVLayout._texCoordX;
-        vertexLayout._texCoordY = UVLayout._textCoordY;
+        vertexLayout._texCoordY = UVLayout._texCoordY;
     }
 
-    public struct PositionLayoutWrapper
+    public struct PositionLayout
     {
         public Vector3 _position;
     }
 
-    public struct UVLayoutWrapper
+    public struct UVLayout
     {
-        public ushort _texCoordX, _textCoordY;
+        public half _texCoordX, _texCoordY;
 
-        private static readonly UVLayoutWrapper _default = new(0, 0);
-        public static UVLayoutWrapper Default { get => _default; }
+        private static readonly UVLayout _default = new(half.zero, half.zero);
+        public static UVLayout Default { get => _default; }
 
-        public UVLayoutWrapper(ushort texCoordX, ushort textCoordY)
+        public UVLayout(half texCoordX, half texCoordY)
         {
             _texCoordX = texCoordX;
-            _textCoordY = textCoordY;
+            _texCoordY = texCoordY;
         }
     }
 }

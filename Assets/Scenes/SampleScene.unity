@@ -227,8 +227,8 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 34
-  orthographic: 1
+  field of view: 50
+  orthographic: 0
   orthographic size: 5
   m_Depth: -1
   m_CullingMask:
@@ -371,11 +371,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b889ec9f14baff4a9b974a8e0ad4903, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _XSizeInChunks: 32
-  _YSizeInChunks: 32
+  _XSizeInChunks: 2
+  _YSizeInChunks: 2
   _uploadMeshToGPUOnMeshBuilt: 0
   _useAdvancedMeshAPI: 1
   _pauseChunkMeshGeneration: 0
+  _atlasMaterial: {fileID: 2100000, guid: 833f7a6e159d9a74a87474cf6754b5de, type: 2}
 --- !u!4 &1008856646
 Transform:
   m_ObjectHideFlags: 0
