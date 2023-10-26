@@ -16,14 +16,14 @@ public struct CreateTileDataJob : IJob
 
     public void Execute()
     {
-        for (int index = 0; index < _chunkCoordNativeArray.Length - 1; index++)
+        for (ushort index = 0; index < _chunkCoordNativeArray.Length; index++)
         {
-            int tileInChunk = 0;
-            for (int y = 0; y < Chunk.Y_SIZE; y++)
+            ushort tileInChunk = 0;
+            for (byte y = 0; y < Chunk.Y_SIZE; y++)
             {
-                for (int x = 0; x < Chunk.X_SIZE; x++)
+                for (byte x = 0; x < Chunk.X_SIZE; x++)
                 {
-                    _tileDataNativeArray[(index * Chunk.TOTAL_SIZE) + index + tileInChunk] = new TileData(Tile.TileType.Stone);
+                    _tileDataNativeArray[(index * Chunk.TOTAL_SIZE) + tileInChunk] = new TileData(Tile.TileType.Stone);
                     tileInChunk++;
                 }
             }

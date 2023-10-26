@@ -162,7 +162,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_RenderShadows: 1
+  m_RenderShadows: 0
   m_RequiresDepthTextureOption: 2
   m_RequiresOpaqueTextureOption: 2
   m_CameraType: 0
@@ -225,8 +225,8 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
-  far clip plane: 1000
+  near clip plane: 0.1
+  far clip plane: 500
   field of view: 50
   orthographic: 0
   orthographic size: 5
@@ -373,7 +373,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _XSizeInChunks: 2
   _YSizeInChunks: 2
-  _uploadMeshToGPUOnMeshBuilt: 0
+  _uploadMeshToGPUOnMeshBuilt: 1
   _useAdvancedMeshAPI: 1
   _pauseChunkMeshGeneration: 0
   _atlasMaterial: {fileID: 2100000, guid: 833f7a6e159d9a74a87474cf6754b5de, type: 2}

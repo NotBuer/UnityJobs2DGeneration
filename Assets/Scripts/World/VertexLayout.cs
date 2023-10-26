@@ -15,15 +15,15 @@ public struct VertexLayout
     {
         return new VertexAttributeDescriptor[]
         {
-            new(VertexAttribute.Position, VertexAttributeFormat.Float32, 3, 0),
-            new(VertexAttribute.TexCoord0, VertexAttributeFormat.Float16, 2, 0)
+            new(VertexAttribute.Position, VertexAttributeFormat.Float32, 3),
+            new(VertexAttribute.TexCoord0, VertexAttributeFormat.Float16, 2)
         };
     }
 
-    public static void MergePositionLayoutWrapper(ref PositionLayout positionLayout, ref VertexLayout vertexLayout)
+    public static void MergePositionLayout(ref PositionLayout positionLayout, ref VertexLayout vertexLayout)
         => vertexLayout._position = positionLayout._position;
 
-    public static void MergeUVLayoutWrapper(ref UVLayout UVLayout, ref VertexLayout vertexLayout)
+    public static void MergeUVLayout(ref UVLayout UVLayout, ref VertexLayout vertexLayout)
     {
         vertexLayout._texCoordX = UVLayout._texCoordX;
         vertexLayout._texCoordY = UVLayout._texCoordY;

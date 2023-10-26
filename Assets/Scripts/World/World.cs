@@ -12,10 +12,6 @@ public class World : MonoBehaviour
     private const ushort WORLD_X_SIZE = 1024;
     private const ushort WORLD_Y_SIZE = 1024;
 
-    //public const ushort VERTEX_BUFFER_SIZE = Chunk.TOTAL_SIZE * Tile.VERTICES;
-    //public const ushort TRIANGLE_BUFFER_SIZE = Chunk.TOTAL_SIZE * Tile.TRIANGLES;
-    //public const ushort UV_BUFFER_SIZE = Chunk.TOTAL_SIZE * Tile.UVS;
-
     [Header("Debugging")]
 
     [Range(0, WORLD_X_SIZE)]
@@ -241,6 +237,8 @@ public class World : MonoBehaviour
                 mesh.uv = chunkUVSArraySlice.ToArray();
             }
 
+            mesh.RecalculateBounds();
+
             ChunkCoord chunkCoord = ChunkCoordNativeArray[index];
             GameObject chunkGameObject = Instantiate(
               new GameObject($"Chunk - X:{chunkCoord.XCoord} / Y:{chunkCoord.YCoord}"),
@@ -259,16 +257,6 @@ public class World : MonoBehaviour
             if (_uploadMeshToGPUOnMeshBuilt) mesh.UploadMeshData(true);
             else mesh.UploadMeshData(false);
         }
-
-        // DEBUG PURPOSES
-        //for (int i = 0; i < ChunkMeshDataArray.Length; i++)
-        //{
-        //    NativeArray<VertexLayout> array = ChunkMeshDataArray[i].GetVertexData<VertexLayout>();
-        //    for (int j = 0; j < array.Length; j++)
-        //    {
-        //        VertexLayout vertexLayout = array[j];
-        //    }
-        //}
 
         if (_useAdvancedMeshAPI)
             Mesh.ApplyAndDisposeWritableMeshData(ChunkMeshDataArray, meshList, MeshUpdateFlags.DontValidateIndices);

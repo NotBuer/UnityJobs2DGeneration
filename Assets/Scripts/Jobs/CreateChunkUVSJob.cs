@@ -49,7 +49,7 @@ public struct CreateChunkUVSJob : IJob
         {
             for (byte x = 0; x < Chunk.X_SIZE; x++)
             {
-                TileData tileData = _tileDataNativeSlice[uvIndexArraySlice++];
+                TileData tileData = _tileDataNativeSlice[uvIndexArraySlice];
 
                 var LeftBottomUV = GetUVTextureForTile(tileData, TexCoord.LEFT_BOTTOM);
                 var LeftTopUV = GetUVTextureForTile(tileData, TexCoord.LEFT_TOP);
@@ -59,22 +59,23 @@ public struct CreateChunkUVSJob : IJob
                 if (_useAdvancedMeshAPI)
                 {
                     VertexLayout LeftBottom = bufferUVArray[uvArrayIndex];
-                    VertexLayout.MergeUVLayoutWrapper(ref LeftBottomUV, ref LeftBottom);
+                    VertexLayout.MergeUVLayout(ref LeftBottomUV, ref LeftBottom);
                     bufferUVArray[uvArrayIndex] = LeftBottom;
 
                     VertexLayout LeftTop = bufferUVArray[uvArrayIndex + 1];
-                    VertexLayout.MergeUVLayoutWrapper(ref LeftTopUV, ref LeftTop);
+                    VertexLayout.MergeUVLayout(ref LeftTopUV, ref LeftTop);
                     bufferUVArray[uvArrayIndex + 1] = LeftTop;
 
                     VertexLayout RigthTop = bufferUVArray[uvArrayIndex + 2];
-                    VertexLayout.MergeUVLayoutWrapper(ref RigthTopUV, ref RigthTop);
+                    VertexLayout.MergeUVLayout(ref RigthTopUV, ref RigthTop);
                     bufferUVArray[uvArrayIndex + 2] = RigthTop;
 
                     VertexLayout RigthBottom = bufferUVArray[uvArrayIndex + 3];
-                    VertexLayout.MergeUVLayoutWrapper(ref RigthBottomUV, ref RigthBottom);
+                    VertexLayout.MergeUVLayout(ref RigthBottomUV, ref RigthBottom);
                     bufferUVArray[uvArrayIndex + 3] = RigthBottom;
 
                     uvArrayIndex += Tile.UVS;
+                    uvIndexArraySlice++;
                     continue;
                 }
 
