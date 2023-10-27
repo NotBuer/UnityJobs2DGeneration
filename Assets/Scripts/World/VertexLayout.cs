@@ -13,6 +13,8 @@ public struct VertexLayout
 
     public static VertexAttributeDescriptor[] DefinedVertexLayout()
     {
+        // TODO: Try to optimize the 3 float32 for positions, to instead use 3 float16, which means (6 bytes only)
+        // as no need for precision beyond 3 decimal places.
         return new VertexAttributeDescriptor[]
         {
             new(VertexAttribute.Position, VertexAttributeFormat.Float32, 3),
@@ -32,6 +34,8 @@ public struct VertexLayout
     public struct PositionLayout
     {
         public Vector3 _position;
+
+        public PositionLayout(Vector3 position) => _position = position;
     }
 
     public struct UVLayout

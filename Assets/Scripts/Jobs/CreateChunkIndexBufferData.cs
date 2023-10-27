@@ -5,26 +5,26 @@ using UnityEngine;
 using UnityEngine.Rendering;
 
 [BurstCompile]
-public struct CreateChunkIndicesJob : IJob
+public struct CreateChunkIndexBufferData : IJob
 {
-    [ReadOnly] public ChunkCoord _chunkCoord;
+    public int _chunkCoordIndex;
+    public ChunkCoord _chunkCoord;
     [ReadOnly] public NativeSlice<TileData> _tileDataNativeSlice;
-    [ReadOnly] public int _chunkCoordIndex;
     [WriteOnly] public NativeArray<int> _chunksIndicesNativeArray;
     public Mesh.MeshDataArray _chunkMeshDataArray;
     public bool _useAdvancedMeshAPI;
 
-    public CreateChunkIndicesJob(
-        ChunkCoord chunkCoord,
-        NativeSlice<TileData> tileDataNativeSlice,
-        int chunkCoordIndex,
-        NativeArray<int> chunksIndicesNativeArray,
-        Mesh.MeshDataArray chunkMeshDataArray,
+    public CreateChunkIndexBufferData(
+        int chunkCoordIndex, 
+        ChunkCoord chunkCoord, 
+        NativeSlice<TileData> tileDataNativeSlice, 
+        NativeArray<int> chunksIndicesNativeArray, 
+        Mesh.MeshDataArray chunkMeshDataArray, 
         bool useAdvancedMeshAPI)
     {
+        _chunkCoordIndex = chunkCoordIndex;
         _chunkCoord = chunkCoord;
         _tileDataNativeSlice = tileDataNativeSlice;
-        _chunkCoordIndex = chunkCoordIndex;
         _chunksIndicesNativeArray = chunksIndicesNativeArray;
         _chunkMeshDataArray = chunkMeshDataArray;
         _useAdvancedMeshAPI = useAdvancedMeshAPI;

@@ -22,6 +22,7 @@ public class World : MonoBehaviour
     [SerializeField]
     private ushort _YSizeInChunks;
 
+    [SerializeField] private bool _pauseCheckJobsCompleted = false;
     [SerializeField] private bool _uploadMeshToGPUOnMeshBuilt = false;
     [SerializeField] private bool _useAdvancedMeshAPI = false;
     [SerializeField] private bool _pauseChunkMeshGeneration = false;
@@ -38,15 +39,13 @@ public class World : MonoBehaviour
     public NativeArray<Vector2> ChunksUVSNativeArray { get; set; }
     public Mesh.MeshDataArray ChunkMeshDataArray { get; set; }
 
-    private JobHandle _jobHandleCreateChunkCoord; 
-    private JobHandle _jobHandleCreateTileCoord;
-    private JobHandle _jobHandleCreateTileData;
+    private JobHandle _jobHandleCreateChunkCoord;
+    private JobHandle _jobHandleCreateChunkData;
     private JobHandle _jobHandleWorldDataGenerated;
     private JobHandle _jobHandleCreateWorldChunksMeshData;
 
     private bool _createChunkCoordsOnce = false;
-    private bool _createTileCoordsOnce = false;
-    private bool _createTileDataOnce = false;
+    private bool _createChunkDataOnce = false;
     private bool _rawWorldDataGenerated = false;
     private bool _createWorldChunksMeshDataOnce = false;
 
@@ -81,74 +80,69 @@ public class World : MonoBehaviour
         _worldMiddleX = (short)(_XSizeInChunks / 2);
         _worldMiddleY = (short)(_YSizeInChunks / 2);
     }
-
+    
     void Start()
     {
-        CreateChunkCoordJob createChunksJob = new(_worldMiddleX, _worldMiddleY, ChunkCoordNativeArray);
-        _jobHandleCreateChunkCoord = createChunksJob.Schedule();
+        CreateChunkCoordJob createChunksCoordJob = new(_worldMiddleX, _worldMiddleY, ChunkCoordNativeArray);
+        _jobHandleCreateChunkCoord = createChunksCoordJob.Schedule();
         Debug.Log("WORLD - Scheduling generation of ChunkCoord...");
 
-        CreateTileCoordJob createTileCoordJob = new(ChunkCoordNativeArray, TileCoordNativeArray);
-        _jobHandleCreateTileCoord = createTileCoordJob.Schedule(_jobHandleCreateChunkCoord);
-        Debug.Log("WORLD - Scheduling generation of TileCoord...");
+        CreateChunkDataJob createChunksDataJob = new(ChunkCoordNativeArray, TileCoordNativeArray, TileDataNativeArray);
+        _jobHandleCreateChunkData = createChunksDataJob.Schedule(_jobHandleCreateChunkCoord);
 
-        CreateTileDataJob createTileDataJob = new(ChunkCoordNativeArray, TileDataNativeArray);
-        _jobHandleCreateTileData = createTileDataJob.Schedule(_jobHandleCreateChunkCoord);
-        Debug.Log("WORLD - Scheduling generation of TileData...");
+        _jobHandleWorldDataGenerated = JobHandle.CombineDependencies(_jobHandleCreateChunkCoord, _jobHandleCreateChunkData);
 
-        _jobHandleWorldDataGenerated = JobHandle.CombineDependencies(_jobHandleCreateChunkCoord, _jobHandleCreateTileCoord, _jobHandleCreateTileData);
+        StartCoroutine(YieldedCheckForJobsCompleted());
     }
 
-    private void Update()
+    private IEnumerator YieldedCheckForJobsCompleted()
     {
-        if (_jobHandleCreateChunkCoord.IsCompleted && !_createChunkCoordsOnce)
+        while(true)
         {
-            _createChunkCoordsOnce = true;
-            _jobHandleCreateChunkCoord.Complete();
+            yield return new WaitWhile(() => _pauseCheckJobsCompleted);
 
-            Debug.Log("WORLD - ChunkCoords generated successfully!");
-            Debug.Log($"WORLD - ChunkCoords array size: {ChunkCoordNativeArray.Length}");
-        }
-
-        if (_jobHandleCreateTileCoord.IsCompleted && !_createTileCoordsOnce)
-        {
-            _createTileCoordsOnce = true;
-            _jobHandleCreateTileCoord.Complete();
-
-            Debug.Log("WORLD - TileCoord generated successfully!");
-            Debug.Log($"WORLD - TileCoord array size: {TileCoordNativeArray.Length}");
-        }
-
-        if (_jobHandleCreateTileData.IsCompleted && !_createTileDataOnce)
-        {
-            _createTileDataOnce = true;
-            _jobHandleCreateTileData.Complete();
-
-            Debug.Log("WORLD - TileData generated successfully!");
-            Debug.Log($"WORLD - TileData array size: {TileDataNativeArray.Length}");
-        }
-
-        // Wait all world raw data be built, in order to start generating the chunks mesh data.
-        if (_jobHandleWorldDataGenerated.IsCompleted && !_rawWorldDataGenerated)
-        {
-            _rawWorldDataGenerated = true;
-            _jobHandleWorldDataGenerated.Complete();
-            GenerateChunkMeshData();
-        }
-
-        if (_jobHandleCreateWorldChunksMeshData.IsCompleted && !_createWorldChunksMeshDataOnce)
-        {
-            _createWorldChunksMeshDataOnce = true;
-            _jobHandleCreateWorldChunksMeshData.Complete();
-            StartCoroutine(YieldedChunkMeshGeneration());
-
-            Debug.Log("WORLD - World Chunks Mesh Data generated successfully!");
-            if(!_useAdvancedMeshAPI)
+            if (_jobHandleCreateChunkCoord.IsCompleted && !_createChunkCoordsOnce)
             {
-                Debug.Log($"WORLD - Vertices array size: {ChunksVerticesNativeArray.Length}");
-                Debug.Log($"WORLD - Triangles array size: {ChunksIndicesNativeArray.Length}");
-                Debug.Log($"WORLD - UVS array size: {ChunksUVSNativeArray.Length}");
+                _createChunkCoordsOnce = true;
+                _jobHandleCreateChunkCoord.Complete();
+
+                Debug.Log("WORLD - ChunkCoords generated successfully!");
+                Debug.Log($"WORLD - ChunkCoords array size: {ChunkCoordNativeArray.Length}");
             }
+
+            if (_jobHandleCreateChunkData.IsCompleted && !_createChunkDataOnce)
+            {
+                _createChunkDataOnce = true;
+                _jobHandleCreateChunkData.Complete();
+                Debug.Log("WORLD - ChunkDatas generated successfully!");
+                Debug.Log($"WORLD - TileCoord array size: {TileCoordNativeArray.Length}");
+                Debug.Log($"WORLD - TileData array size: {TileDataNativeArray.Length}");
+            }
+
+            // Wait all world raw data be built, in order to start generating the chunks mesh data.
+            if (_jobHandleWorldDataGenerated.IsCompleted && !_rawWorldDataGenerated)
+            {
+                _rawWorldDataGenerated = true;
+                _jobHandleWorldDataGenerated.Complete();
+                GenerateChunkMeshData();
+            }
+
+            if (_jobHandleCreateWorldChunksMeshData.IsCompleted && !_createWorldChunksMeshDataOnce)
+            {
+                _createWorldChunksMeshDataOnce = true;
+                _jobHandleCreateWorldChunksMeshData.Complete();
+                StartCoroutine(YieldedChunkMeshGeneration());
+
+                Debug.Log("WORLD - World Chunks Mesh Data generated successfully!");
+                if (!_useAdvancedMeshAPI)
+                {
+                    Debug.Log($"WORLD - Vertices array size: {ChunksVerticesNativeArray.Length}");
+                    Debug.Log($"WORLD - Triangles array size: {ChunksIndicesNativeArray.Length}");
+                    Debug.Log($"WORLD - UVS array size: {ChunksUVSNativeArray.Length}");
+                }
+            }
+
+            yield return null;
         }
     }
 
@@ -157,42 +151,30 @@ public class World : MonoBehaviour
         Debug.Log("WORLD - Scheduling generation of World Chunks Mesh Data...");
         _jobHandleCreateWorldChunksMeshData = _jobHandleWorldDataGenerated;
 
-        NativeArray<JobHandle> jobDependenciesHandleNativeArray = new(4, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-
         NativeArray<VertexAttributeDescriptor> bufferLayout = new(VertexLayout.DefinedVertexLayout(), Allocator.TempJob);
 
         for (int i = 0; i < ChunkCoordNativeArray.Length; i++) 
         {
             NativeSlice<TileData> tileDataNativeSlice = TileDataNativeArray.Slice(i * Chunk.TOTAL_SIZE, Chunk.TOTAL_SIZE);
 
-            // First start the job to create the vertices.
-            CreateChunkVerticesJob createChunkVerticesJob = 
-                new(ChunkCoordNativeArray[i], tileDataNativeSlice, i, ChunksVerticesNativeArray, ChunkMeshDataArray, bufferLayout, _useAdvancedMeshAPI);
-            JobHandle jobHandleCreateVertices = createChunkVerticesJob.Schedule(_jobHandleCreateWorldChunksMeshData);
+            // Schedule the job to create the chunk vertex buffer.
+            CreateChunkVertexBufferDataJob createChunkVertexBufferDataJob = 
+                new(i, ChunkCoordNativeArray[i], tileDataNativeSlice, ChunksVerticesNativeArray, 
+                ChunksUVSNativeArray, ChunkMeshDataArray, bufferLayout, _useAdvancedMeshAPI);
+            JobHandle jobHandleCreateChunkVertexBufferData = createChunkVertexBufferDataJob.Schedule(_jobHandleCreateWorldChunksMeshData);
 
+            // Schedule the job to create the chunk index buffer.
+            CreateChunkIndexBufferData createChunkIndexBufferData = 
+                new(i, ChunkCoordNativeArray[i], tileDataNativeSlice, ChunksIndicesNativeArray, 
+                ChunkMeshDataArray, _useAdvancedMeshAPI);
+            JobHandle jobHandleCreateChunkIndexBufferData = createChunkIndexBufferData.Schedule(jobHandleCreateChunkVertexBufferData);
 
-            // Schedule the job to create the UVs when the job that will create the vertices finish.
-            CreateChunkUVSJob createChunkUVSJob =
-                new(ChunkCoordNativeArray[i], tileDataNativeSlice, i, ChunksUVSNativeArray, ChunkMeshDataArray, _useAdvancedMeshAPI);
-            JobHandle jobHandleCreateUVS = createChunkUVSJob.Schedule(jobHandleCreateVertices);
-
-
-            // Start the job to create the triangles independently from the other.
-            CreateChunkIndicesJob createChunkIndicesJob = 
-                new(ChunkCoordNativeArray[i], tileDataNativeSlice, i, ChunksIndicesNativeArray, ChunkMeshDataArray, _useAdvancedMeshAPI);
-            JobHandle jobHandleCreateIndices = createChunkIndicesJob.Schedule(jobHandleCreateUVS);
-
-            // Handle get all jobHandles and combine all dependencies of them before proceeding.
-            jobDependenciesHandleNativeArray[0] = _jobHandleCreateWorldChunksMeshData;
-            jobDependenciesHandleNativeArray[1] = jobHandleCreateVertices;
-            jobDependenciesHandleNativeArray[2] = jobHandleCreateUVS;
-            jobDependenciesHandleNativeArray[3] = jobHandleCreateIndices;
-            _jobHandleCreateWorldChunksMeshData = JobHandle.CombineDependencies(jobDependenciesHandleNativeArray);
+            _jobHandleCreateWorldChunksMeshData = 
+                JobHandle.CombineDependencies(_jobHandleCreateWorldChunksMeshData, jobHandleCreateChunkVertexBufferData, jobHandleCreateChunkIndexBufferData);
         }
 
         _jobHandleCreateWorldChunksMeshData.Complete();
         bufferLayout.Dispose(_jobHandleCreateWorldChunksMeshData);
-        jobDependenciesHandleNativeArray.Dispose();
     }
 
     private IEnumerator YieldedChunkMeshGeneration()

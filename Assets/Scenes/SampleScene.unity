@@ -371,9 +371,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b889ec9f14baff4a9b974a8e0ad4903, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _XSizeInChunks: 2
-  _YSizeInChunks: 2
-  _uploadMeshToGPUOnMeshBuilt: 1
+  _XSizeInChunks: 4
+  _YSizeInChunks: 4
+  _pauseCheckJobsCompleted: 0
+  _uploadMeshToGPUOnMeshBuilt: 0
   _useAdvancedMeshAPI: 1
   _pauseChunkMeshGeneration: 0
   _atlasMaterial: {fileID: 2100000, guid: 833f7a6e159d9a74a87474cf6754b5de, type: 2}
