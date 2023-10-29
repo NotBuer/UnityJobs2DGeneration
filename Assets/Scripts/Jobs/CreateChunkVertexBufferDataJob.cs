@@ -96,16 +96,15 @@ public struct CreateChunkVertexBufferDataJob : IJob
                     continue;
                 }
 
-                _chunksVerticesNativeArray[indexOffsetByStride] = new Vector3(x, y);          //(0, 0)
+                _chunksVerticesNativeArray[indexOffsetByStride] = new Vector3(x, y);            //(0, 0)
                 _chunksVerticesNativeArray[indexOffsetByStride+1] = new Vector3(x, 1 + y);      //(0, 1)
                 _chunksVerticesNativeArray[indexOffsetByStride+2] = new Vector3(x + 1, y + 1);  //(1, 1)
                 _chunksVerticesNativeArray[indexOffsetByStride+3] = new Vector3(x + 1, y);      //(1, 0)
 
-                // TODO: Aplicar pattern VertexLayoutWrapper...
-                _chunksUVSNativeArray[indexOffsetByStride] = new Vector2(0, 0);   //(0, 0)
-                _chunksUVSNativeArray[indexOffsetByStride+1] = new Vector2(0, 1);   //(0, 1)
-                _chunksUVSNativeArray[indexOffsetByStride+2] = new Vector2(1, 1);   //(1, 1)
-                _chunksUVSNativeArray[indexOffsetByStride+3] = new Vector2(1, 0);   //(1, 0)
+                _chunksUVSNativeArray[indexOffsetByStride] = new Vector2(LeftBottomUV._texCoordX, LeftBottomUV._texCoordY);      //(0, 0)
+                _chunksUVSNativeArray[indexOffsetByStride+1] = new Vector2(LeftTopUV._texCoordX, LeftTopUV._texCoordY);          //(0, 1)
+                _chunksUVSNativeArray[indexOffsetByStride+2] = new Vector2(RigthTopUV._texCoordX, RigthTopUV._texCoordY);        //(1, 1)
+                _chunksUVSNativeArray[indexOffsetByStride+3] = new Vector2(RigthBottomUV._texCoordX, RigthBottomUV._texCoordY);  //(1, 0)
 
                 indexOffsetByStride += Tile.VERTICES;
             }

@@ -1,10 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Rendering;
+
+using Debug = UnityEngine.Debug;
 
 public class World : MonoBehaviour
 {
@@ -13,6 +16,9 @@ public class World : MonoBehaviour
     private const ushort WORLD_Y_SIZE = 1024;
 
     [Header("Debugging")]
+
+    [SerializeField]
+    private int _seed;
 
     [Range(0, WORLD_X_SIZE)]
     [SerializeField]
@@ -49,9 +55,15 @@ public class World : MonoBehaviour
     private bool _rawWorldDataGenerated = false;
     private bool _createWorldChunksMeshDataOnce = false;
 
+    private Stopwatch stopwatch = new Stopwatch();
 
     private void Awake() 
     {
+        stopwatch.Start();
+
+        _seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+        UnityEngine.Random.InitState(_seed);
+
         ChunkCoordNativeArray = new(_XSizeInChunks * _YSizeInChunks, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
         TileCoordNativeArray = new(Chunk.TOTAL_SIZE * ChunkCoordNativeArray.Length, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
         TileDataNativeArray = new(Chunk.TOTAL_SIZE * ChunkCoordNativeArray.Length, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
@@ -226,6 +238,11 @@ public class World : MonoBehaviour
               new GameObject($"Chunk - X:{chunkCoord.XCoord} / Y:{chunkCoord.YCoord}"),
               new Vector3(chunkCoord.XCoord, chunkCoord.YCoord),
               Quaternion.identity, gameObject.transform);
+            chunkGameObject.layer = LayerMask.NameToLayer(LayerUtils.LAYER_World);
+
+            SortingGroup sortingGroup = chunkGameObject.AddComponent<SortingGroup>();
+            sortingGroup.sortingLayerName = LayerUtils.LAYER_World;
+            sortingGroup.sortingOrder = 0;
 
             MeshFilter meshFilter = chunkGameObject.AddComponent<MeshFilter>();
             meshFilter.sharedMesh = mesh;
@@ -242,6 +259,9 @@ public class World : MonoBehaviour
 
         if (_useAdvancedMeshAPI)
             Mesh.ApplyAndDisposeWritableMeshData(ChunkMeshDataArray, meshList, MeshUpdateFlags.DontValidateIndices);
+
+        stopwatch.Stop();
+        Debug.Log($"Generation total time taken: {stopwatch.Elapsed}");
     }
 
     private void OnApplicationQuit()
