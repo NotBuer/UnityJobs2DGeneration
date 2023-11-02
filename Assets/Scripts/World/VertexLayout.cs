@@ -1,29 +1,30 @@
+using System.Runtime.InteropServices;
 using Unity.Mathematics;
-using UnityEngine;
 using UnityEngine.Rendering;
 
-[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+[StructLayout(LayoutKind.Sequential)]
 public struct VertexLayout
 {
     public const ushort VERTEX_BUFFER_SIZE = Chunk.TOTAL_SIZE * Tile.VERTICES;
     public const ushort INDEX_BUFFER_SIZE = Chunk.TOTAL_SIZE * Tile.TRIANGLES;
 
-    public Vector3 _position;
+    public half _positionX, _positionY;
     public half _texCoordX, _texCoordY;
 
     public static VertexAttributeDescriptor[] DefinedVertexLayout()
     {
-        // TODO: Try to optimize the 3 float32 for positions, to instead use 3 float16, which means (6 bytes only)
-        // as no need for precision beyond 3 decimal places.
         return new VertexAttributeDescriptor[]
         {
-            new(VertexAttribute.Position, VertexAttributeFormat.Float32, 3),
+            new(VertexAttribute.Position, VertexAttributeFormat.Float16, 2),
             new(VertexAttribute.TexCoord0, VertexAttributeFormat.Float16, 2)
         };
     }
 
     public static void MergePositionLayout(ref PositionLayout positionLayout, ref VertexLayout vertexLayout)
-        => vertexLayout._position = positionLayout._position;
+    {
+        vertexLayout._positionX = positionLayout._positionX;
+        vertexLayout._positionY = positionLayout._positionY;
+    }
 
     public static void MergeUVLayout(ref UVLayout UVLayout, ref VertexLayout vertexLayout)
     {
@@ -33,9 +34,14 @@ public struct VertexLayout
 
     public struct PositionLayout
     {
-        public Vector3 _position;
+        public half _positionX;
+        public half _positionY;
 
-        public PositionLayout(Vector3 position) => _position = position;
+        public PositionLayout(half positionX, half positionY)
+        {
+            _positionX = positionX;
+            _positionY = positionY;
+        }
     }
 
     public struct UVLayout

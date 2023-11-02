@@ -15,6 +15,12 @@ public class World : MonoBehaviour
     private const ushort WORLD_X_SIZE = 1024;
     private const ushort WORLD_Y_SIZE = 1024;
 
+    private const MeshUpdateFlags MESH_FLAGS_OPTIMIZED =
+        MeshUpdateFlags.DontValidateIndices |
+        MeshUpdateFlags.DontRecalculateBounds | 
+        MeshUpdateFlags.DontResetBoneBounds |
+        MeshUpdateFlags.DontNotifyMeshUsers;
+
     [Header("Debugging")]
 
     [SerializeField]
@@ -204,8 +210,8 @@ public class World : MonoBehaviour
                 meshData.subMeshCount = 1;
                 meshData.SetSubMesh(
                     0,
-                    new SubMeshDescriptor(0, VertexLayout.INDEX_BUFFER_SIZE, MeshTopology.Triangles),
-                    MeshUpdateFlags.DontValidateIndices
+                    new(0, VertexLayout.INDEX_BUFFER_SIZE, MeshTopology.Triangles),
+                    MESH_FLAGS_OPTIMIZED
                 );
                 meshList.Add(mesh);
             }
@@ -245,7 +251,7 @@ public class World : MonoBehaviour
             sortingGroup.sortingOrder = 0;
 
             MeshFilter meshFilter = chunkGameObject.AddComponent<MeshFilter>();
-            meshFilter.sharedMesh = mesh;
+            meshFilter.mesh = mesh;
 
             MeshRenderer meshRenderer = chunkGameObject.AddComponent<MeshRenderer>();
             meshRenderer.material = _atlasMaterial;
@@ -258,7 +264,7 @@ public class World : MonoBehaviour
         }
 
         if (_useAdvancedMeshAPI)
-            Mesh.ApplyAndDisposeWritableMeshData(ChunkMeshDataArray, meshList, MeshUpdateFlags.DontValidateIndices);
+            Mesh.ApplyAndDisposeWritableMeshData(ChunkMeshDataArray, meshList, MESH_FLAGS_OPTIMIZED);
 
         stopwatch.Stop();
         Debug.Log($"Generation total time taken: {stopwatch.Elapsed}");

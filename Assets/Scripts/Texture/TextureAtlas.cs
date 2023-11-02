@@ -1,5 +1,3 @@
-using System.Numerics;
-
 public static class TextureAtlas
 {
     public enum TexCoord : byte

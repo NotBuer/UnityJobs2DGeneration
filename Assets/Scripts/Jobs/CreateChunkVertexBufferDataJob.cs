@@ -1,6 +1,7 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
 using static TextureAtlas;
@@ -64,10 +65,10 @@ public struct CreateChunkVertexBufferDataJob : IJob
                 var RigthTopUV = GetUVTextureForTile(tileData, TexCoord.RIGHT_TOP);
                 var RigthBottomUV = GetUVTextureForTile(tileData, TexCoord.RIGHT_BOTTOM);
 
-                var LeftBottomPosition = new VertexLayout.PositionLayout(new Vector3(x, y));
-                var LeftTopPosition = new VertexLayout.PositionLayout(new Vector3(x, 1 + y));
-                var RigthTopPosition = new VertexLayout.PositionLayout(new Vector3(x + 1, y + 1));
-                var RigthBottomPosition = new VertexLayout.PositionLayout(new Vector3(x + 1, y));
+                var LeftBottomPosition = new VertexLayout.PositionLayout(new(x), new(y));
+                var LeftTopPosition = new VertexLayout.PositionLayout(new(x), new(y + 1));
+                var RigthTopPosition = new VertexLayout.PositionLayout(new(x + 1), new(y + 1));
+                var RigthBottomPosition = new VertexLayout.PositionLayout(new(x + 1), new(y));
 
                 if (_useAdvancedMeshAPI)
                 {
